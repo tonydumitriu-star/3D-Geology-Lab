@@ -51,31 +51,41 @@
 
         // --- FUNCȚIE STABILĂ DE PARSARE ---
         function gestioneazaClickPunct(eveniment) {
-            // Oprim propagarea evenimentului ca harta să nu se deplaseze/teleporteze
-            L.DomEvent.stopPropagation(eveniment);
+            // Oprim comportamentul care mută/teleportează harta
+            if (eveniment.originalEvent) {
+                L.DomEvent.stopPropagation(eveniment.originalEvent);
+                L.DomEvent.preventDefault(eveniment.originalEvent);
+            }
 
             var layer = eveniment.layer;
-            var props = layer.feature && layer.feature.properties ? layer.feature.properties : {};
             
-            // Preluăm corect numele punctului
+            // Preluăm proprietățile în siguranță indiferent de cum le exportă My Maps
+            var props = (layer.feature && layer.feature.properties) ? layer.feature.properties : {};
             var numePunct = props.name || props.title || layer.options.title || "Afloriment fără titlu";
-            var descriereBruta = props.description || "";
+            var descriereBruta = props.description || props.popupContent || "";
 
-            layer.closePopup();
+            if (layer.closePopup) {
+                layer.closePopup();
+            }
 
             document.getElementById('titlu-afloriment').innerText = numePunct;
 
-            // Căutăm un link valid de Sketchfab (verificăm skfb.ly sau link-ul complet)
-            var skfbRegex = /(https?:\/\/(?:www\.)?(?:skfb\.ly\/[a-zA-Z0-9]+|sketchfab\.com\/3d-models\/[^\s"<>]+))/i;
+            // Căutare sigură a link-ului Sketchfab
+            var skfbRegex = /(?:skfb\.ly\/[a-zA-Z0-9]+|sketchfab\.com\/3d-models\/[^\s"<>]+)/i;
             var matchSkfb = descriereBruta.match(skfbRegex);
             
             if (matchSkfb) {
-                var skfbLink = matchSkfb[1];
-                var embedSrc = skfbLink;
-                if (skfbLink.includes("skfb.ly/")) {
-                    var codScurt = skfbLink.split("skfb.ly/")[1].trim();
+                var linkGasit = matchSkfb[0];
+                var embedSrc = linkGasit;
+                if (linkGasit.includes("skfb.ly/")) {
+                    var codScurt = linkGasit.split("skfb.ly/")[1].trim();
                     embedSrc = `https://sketchfab.com/models/${codScurt}/embed`;
+                } else if (linkGasit.includes("sketchfab.com/3d-models/")) {
+                    var parti = linkGasit.split("-");
+                    var potentialId = parti[parti.length - 1].trim();
+                    embedSrc = `https://sketchfab.com/models/${potentialId}/embed`;
                 }
+                
                 document.getElementById('container-3d').innerHTML = `
                     <iframe class="sketchfab-embed" 
                         src="${embedSrc}?autostart=1&ui_infos=0&ui_inspector=1" 
@@ -86,7 +96,7 @@
                 document.getElementById('container-3d').innerHTML = `<p style="color: #888; font-style: italic;">Niciun model 3D asociat acestui punct.</p>`;
             }
 
-            // Curățăm textul de imagini și de link-ul Sketchfab
+            // Curățarea textului pentru afișare ordonată
             var tempDiv = document.createElement("div");
             tempDiv.innerHTML = descriereBruta;
             
@@ -97,7 +107,7 @@
 
             var textCurat = tempDiv.textContent || tempDiv.innerText || "";
             if (matchSkfb) {
-                textCurat = textCurat.replace(matchSkfb[1], '');
+                textCurat = textCurat.replace(matchSkfb[0], '');
             }
 
             var containerDetalii = document.getElementById('continut-detalii');
@@ -110,7 +120,7 @@
             }
         }
 
-        // Inițializăm KMZ parser-ul
+        // Inițializăm KMZ parser-ul și atașăm evenimentul pe fiecare punct în parte
         var kmzParser = L.kmzLayer().addTo(map);
         
         kmzParser.on('load', function(e) {
