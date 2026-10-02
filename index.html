@@ -5,6 +5,7 @@
     <title>Hartă Geologică 3D - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
     
     <style>
         body { display: flex; margin: 0; height: 100vh; font-family: Arial, sans-serif; background: #1e1e1e; color: #fff;}
@@ -51,88 +52,94 @@
         };
         L.control.layers(null, straturiSuprapuse, {collapsed: false}).addTo(map);
 
-        // --- FUNCȚIE DE GESTIONARE A CLICK-ULUI ȘI AFIȘĂRII ---
-        function afiseazaDetaliiPunct(feature, layer) {
-            layer.on('click', function(e) {
-                L.DomEvent.stopPropagation(e);
+        // --- FUNCȚIE INTELIGENTĂ DE EXTRAGERE A DATELOR DIN KMZ ---
+        function afiseazaDetaliiKmz(e) {
+            var layer = e.layer;
+            if (!layer.feature || !layer.feature.properties) return;
 
-                var props = feature.properties || {};
+            var props = layer.feature.properties;
+            var numePunct = props.name || "Afloriment";
+            var descriereBruta = props.description || "";
+
+            document.getElementById('titlu-afloriment').innerText = numePunct;
+
+            // Căutare link Sketchfab (atât skfb.ly cât și link complet)
+            var skfbRegex = /(https?:\/\/(?:www\.)?skfb\.ly\/[a-zA-Z0-9]+|https?:\/\/(?:www\.)?sketchfab\.com\/3d-models\/[^\s"<>]+)/i;
+            var matchSkfb = descriereBruta.match(skfbRegex);
+
+            // Dacă nu e în descriere, căutăm în tot textul brut al proprietăților
+            if (!matchSkfb) {
+                var textComplet = JSON.stringify(props);
+                matchSkfb = textComplet.match(skfbRegex);
+            }
+            
+            if (matchSkfb) {
+                var linkGasit = matchSkfb[0];
+                var embedSrc = linkGasit;
+                if (linkGasit.includes("skfb.ly/")) {
+                    var codScurt = linkGasit.split("skfb.ly/")[1].trim();
+                    embedSrc = `https://sketchfab.com/models/${codScurt}/embed`;
+                } else if (linkGasit.includes("sketchfab.com/3d-models/")) {
+                    var parti = linkGasit.split("-");
+                    var potentialId = parti[parti.length - 1].trim();
+                    embedSrc = `https://sketchfab.com/models/${potentialId}/embed`;
+                }
                 
-                // Căutăm titlul în orice variantă posibilă de coloană din GeoJSON
-                var numePunct = props.name || props.TITLE || props.Name || props.Nume || props.denumire || props.LABEL || "Afloriment";
+                document.getElementById('container-3d').innerHTML = `
+                    <iframe class="sketchfab-embed" 
+                        src="${embedSrc}?autostart=1&ui_infos=0&ui_inspector=1" 
+                        allow="autoplay; fullscreen; vr">
+                    </iframe>
+                `;
+            } else {
+                document.getElementById('container-3d').innerHTML = `<p style="color: #888; font-style: italic;">Niciun model 3D asociat acestui punct.</p>`;
+            }
 
-                // Adunăm toate proprietățile disponibile în caz că descrierea e sub altă cheie
-                var descriereBruta = props.description || props.popupContent || props.DESC || props.Description || "";
-                
-                // Dacă nu există o descriere standard, transformăm toate atributele într-un text ordonat
-                if (!descriereBruta || descriereBruta.trim() === "") {
-                    descriereBruta = Object.entries(props)
-                        .map(([key, val]) => `<b>${key}:</b> ${val}`)
-                        .join("<br>");
-                }
+            // Curățăm textul pentru panou
+            var tempDiv = document.createElement("div");
+            tempDiv.innerHTML = descriereBruta;
+            
+            var imgs = tempDiv.getElementsByTagName('img');
+            for (var k = imgs.length - 1; k >= 0; k--) {
+                imgs[k].parentNode.removeChild(imgs[k]);
+            }
 
-                document.getElementById('titlu-afloriment').innerText = numePunct;
+            var textCurat = tempDiv.textContent || tempDiv.innerText || "";
+            if (!textCurat.trim()) {
+                // Dacă descrierea e goală, afișăm atributele curat
+                textCurat = Object.entries(props)
+                    .filter(([k]) => k !== 'name' && k !== 'styleUrl')
+                    .map(([k, v]) => `${k}: ${v}`)
+                    .join("\n");
+            }
 
-                // Căutare sigură pentru link-ul Sketchfab
-                var skfbRegex = /(https?:\/\/(?:www\.)?skfb\.ly\/[a-zA-Z0-9]+|https?:\/\/(?:www\.)?sketchfab\.com\/3d-models\/[^\s"<>]+)/i;
-                var matchSkfb = descriereBruta.match(skfbRegex);
-                
-                if (matchSkfb) {
-                    var linkGasit = matchSkfb[0];
-                    var embedSrc = linkGasit;
-                    if (linkGasit.includes("skfb.ly/")) {
-                        var codScurt = linkGasit.split("skfb.ly/")[1].trim();
-                        embedSrc = `https://sketchfab.com/models/${codScurt}/embed`;
-                    } else if (linkGasit.includes("sketchfab.com/3d-models/")) {
-                        var parti = linkGasit.split("-");
-                        var potentialId = parti[parti.length - 1].trim();
-                        embedSrc = `https://sketchfab.com/models/${potentialId}/embed`;
-                    }
-                    
-                    document.getElementById('container-3d').innerHTML = `
-                        <iframe class="sketchfab-embed" 
-                            src="${embedSrc}?autostart=1&ui_infos=0&ui_inspector=1" 
-                            allow="autoplay; fullscreen; vr">
-                        </iframe>
-                    `;
-                } else {
-                    document.getElementById('container-3d').innerHTML = `<p style="color: #888; font-style: italic;">Niciun model 3D asociat acestui punct.</p>`;
-                }
-
-                // Curățăm textul pentru panou
-                var tempDiv = document.createElement("div");
-                tempDiv.innerHTML = descriereBruta;
-                
-                var imgs = tempDiv.getElementsByTagName('img');
-                for (var k = imgs.length - 1; k >= 0; k--) {
-                    imgs[k].parentNode.removeChild(imgs[k]);
-                }
-
-                var textCurat = tempDiv.textContent || tempDiv.innerText || "";
-                if (matchSkfb) {
-                    textCurat = textCurat.replace(matchSkfb[0], '');
-                }
-
-                var containerDetalii = document.getElementById('continut-detalii');
-                if (textCurat.trim().length > 0) {
-                    containerDetalii.className = "detalii-text";
-                    containerDetalii.innerText = textCurat.trim();
-                } else {
-                    containerDetalii.className = "";
-                    containerDetalii.innerHTML = "";
-                }
-            });
+            var containerDetalii = document.getElementById('continut-detalii');
+            if (textCurat.trim().length > 0) {
+                containerDetalii.className = "detalii-text";
+                containerDetalii.innerText = textCurat.trim();
+            } else {
+                containerDetalii.className = "";
+                containerDetalii.innerHTML = "";
+            }
         }
 
-        // Încărcăm fișierul GeoJSON menținând iconițele implicite/specifice
-        fetch('puncte.geojson')
-            .then(response => response.json())
-            .then(data => {
-                L.geoJSON(data, {
-                    onEachFeature: afiseazaDetaliiPunct
-                }).addTo(map);
-            })
-            .catch(error => console.log('Eroare la încărcarea punctelor:', error));
+        // Inițializăm parser-ul KMZ original care păstrează iconițele și stilurile din My Maps
+        var kmzParser = L.kmzLayer();
+
+        kmzParser.on('load', function(e) {
+            e.layer.eachLayer(function (layer) {
+                if (layer.unbindPopup) {
+                    layer.unbindPopup(); // Oprim balonașele enervante de pe hartă și teleportarea
+                }
+                layer.on('click', function(ev) {
+                    L.DomEvent.stopPropagation(ev);
+                    afiseazaDetaliiKmz(ev);
+                });
+            });
+        });
+
+        kmzParser.addTo(map);
+        kmzParser.load('puncte.kmz');
 
     </script>
 </body>
