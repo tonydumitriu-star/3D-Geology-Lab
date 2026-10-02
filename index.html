@@ -11,9 +11,8 @@
         body { display: flex; margin: 0; height: 100vh; font-family: Arial, sans-serif; background: #1e1e1e; color: #fff;}
         #harta { width: 65%; height: 100%; }
         #panou-info { width: 35%; height: 100%; padding: 25px; overflow-y: auto; box-sizing: border-box; border-left: 2px solid #333;}
-        .sketchfab-embed { width: 100%; height: 280px; border: none; border-radius: 8px; margin-bottom: 15px;}
+        .sketchfab-embed { width: 100%; height: 300px; border: none; border-radius: 8px; margin-bottom: 20px;}
         h2 { margin-top: 0; color: #e0a96d; font-size: 22px; }
-        .panou-img { width: 100%; max-height: 220px; object-fit: cover; border-radius: 6px; margin-bottom: 12px; border: 1px solid #444; }
         .detalii-text { font-size: 14px; line-height: 1.6; margin-top: 15px; color: #ddd; background: #252525; padding: 15px; border-radius: 6px; border: 1px solid #3a3a3a; white-space: pre-line; }
     </style>
 </head>
@@ -23,9 +22,8 @@
     <div id="panou-info">
         <h2 id="titlu-afloriment">Selectează un punct</h2>
         <div id="container-3d">
-            <p style="color: #888; font-style: italic;">Dă click pe un punct de pe hartă pentru a încărca modelul 3D și detaliile.</p>
+            <p style="color: #888; font-style: italic;">Dă click pe un punct de pe hartă pentru a încărca modelul 3D și fișa geologică.</p>
         </div>
-        <div id="container-imagini"></div>
         <div id="continut-detalii"></div>
     </div>
 
@@ -51,19 +49,23 @@
         };
         L.control.layers(null, straturiSuprapuse, {collapsed: false}).addTo(map);
 
-        // --- FUNCȚIE AVANSATĂ DE PARSARE ---
+        // --- FUNCȚIE STABILĂ DE PARSARE ---
         function gestioneazaClickPunct(eveniment) {
-            var layer = eveniment.layer;
-            var numePunct = layer.feature.properties.name || "Afloriment fără titlu";
-            var descriereBruta = layer.feature.properties.description || "";
+            // Oprim propagarea evenimentului ca harta să nu se deplaseze/teleporteze
+            L.DomEvent.stopPropagation(eveniment);
 
-            // Închidem popup-ul clasic
+            var layer = eveniment.layer;
+            var props = layer.feature && layer.feature.properties ? layer.feature.properties : {};
+            
+            // Preluăm corect numele punctului
+            var numePunct = props.name || props.title || layer.options.title || "Afloriment fără titlu";
+            var descriereBruta = props.description || "";
+
             layer.closePopup();
 
-            // Setăm titlul
             document.getElementById('titlu-afloriment').innerText = numePunct;
 
-            // 1. Căutăm link-ul Sketchfab
+            // Căutăm un link valid de Sketchfab (verificăm skfb.ly sau link-ul complet)
             var skfbRegex = /(https?:\/\/(?:www\.)?(?:skfb\.ly\/[a-zA-Z0-9]+|sketchfab\.com\/3d-models\/[^\s"<>]+))/i;
             var matchSkfb = descriereBruta.match(skfbRegex);
             
@@ -84,23 +86,13 @@
                 document.getElementById('container-3d').innerHTML = `<p style="color: #888; font-style: italic;">Niciun model 3D asociat acestui punct.</p>`;
             }
 
-            // 2. Extragem imagini bazate pe tag-urile <img> din codul inspectat
+            // Curățăm textul de imagini și de link-ul Sketchfab
             var tempDiv = document.createElement("div");
             tempDiv.innerHTML = descriereBruta;
-            var imgTags = tempDiv.getElementsByTagName("img");
             
-            var htmlImagini = "";
-            for (var i = 0; i < imgTags.length; i++) {
-                var imgSrc = imgTags[i].src;
-                if (imgSrc) {
-                    htmlImagini += `<img src="${imgSrc}" class="panou-img" alt="Foto afloriment">`;
-                }
-            }
-            document.getElementById('container-imagini').innerHTML = htmlImagini;
-
-            // 3. Curățăm textul de imagini și de link-ul Sketchfab pentru secțiunea de detalii
-            for (var k = imgTags.length - 1; k >= 0; k--) {
-                imgTags[k].parentNode.removeChild(imgTags[k]);
+            var imgs = tempDiv.getElementsByTagName('img');
+            for (var k = imgs.length - 1; k >= 0; k--) {
+                imgs[k].parentNode.removeChild(imgs[k]);
             }
 
             var textCurat = tempDiv.textContent || tempDiv.innerText || "";
@@ -120,7 +112,13 @@
 
         // Inițializăm KMZ parser-ul
         var kmzParser = L.kmzLayer().addTo(map);
-        kmzParser.on('click', gestioneazaClickPunct);
+        
+        kmzParser.on('load', function(e) {
+            e.layer.eachLayer(function (layer) {
+                layer.on('click', gestioneazaClickPunct);
+            });
+        });
+
         kmzParser.load('puncte.kmz');
 
     </script>
