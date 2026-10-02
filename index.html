@@ -13,7 +13,7 @@
         
         .sketchfab-embed { width: 100%; height: 260px; border: none; border-radius: 8px; margin-bottom: 15px; display: none; }
         
-        /* Stiluri pentru caruselul media (poze/video) */
+        /* Carusel Media */
         .carusel-container { position: relative; width: 100%; height: 240px; background: #111; border-radius: 6px; margin-bottom: 15px; display: none; overflow: hidden; border: 1px solid #444; }
         .carusel-slide { width: 100%; height: 100%; display: none; justify-content: center; align-items: center; }
         .carusel-slide.active { display: flex; }
@@ -26,7 +26,7 @@
         h2 { margin-top: 0; color: #e0a96d; font-size: 22px; }
         .detalii-text { font-size: 14px; line-height: 1.6; margin-top: 15px; color: #ddd; background: #252525; padding: 15px; border-radius: 6px; border: 1px solid #3a3a3a; white-space: pre-line; }
         
-        /* Buton și Formular Admin flotant */
+        /* Buton și Formular Admin */
         #btn-toggle-admin { position: absolute; top: 15px; right: 15px; background: #e0a96d; color: #1e1e1e; border: none; padding: 10px 15px; font-weight: bold; border-radius: 6px; cursor: pointer; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         #btn-toggle-admin:hover { background: #f0b97d; }
         
@@ -59,17 +59,15 @@
 
     <div id="harta">
         <button id="btn-toggle-admin" onclick="deschideModAdaugare()">+ Adaugă Punct Nou</button>
-        <div id="badge-versiune">Versiune: v1.0.18</div>
+        <div id="badge-versiune">Versiune: v1.0.19</div>
     </div>
 
-    <!-- Panou Informații (Dreapta) -->
+    <!-- Panou Informații -->
     <div id="panou-info">
         <h2 id="titlu-afloriment">Selectează un punct</h2>
         
-        <!-- Zona 3D Sketchfab -->
         <iframe id="iframe-sketchfab" class="sketchfab-embed" allow="autoplay; fullscreen; vr"></iframe>
         
-        <!-- Carusel Media (Poze / Filme Google Drive) -->
         <div id="carusel-media" class="carusel-container">
             <button class="carusel-btn prev" onclick="schimbaSlide(-1)">&#10094;</button>
             <div id="carusel-slides-wrapper" style="width:100%; height:100%;"></div>
@@ -82,7 +80,7 @@
     <!-- Modal Formular Adaugare Punct -->
     <div id="modal-admin">
         <h3>Adaugă Afloriment Nou</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top:0;">Dă click pe hartă pentru a prelua automat coordonatele sau introdu-le mai jos.</p>
+        <p style="font-size: 12px; color: #aaa; margin-top:0;">Click pe hartă pentru coordonate sau completează manual.</p>
         
         <label>Cod Identificare (ex: H100):</label>
         <input type="text" id="input-cod" placeholder="H100">
@@ -94,16 +92,16 @@
         <input type="text" id="input-lon" placeholder="22.6246">
 
         <label>Descriere completă / Vârstă / Note:</label>
-        <textarea id="input-desc" placeholder="Scrie orice detalii geologice dorești..."></textarea>
+        <textarea id="input-desc" placeholder="Detalii geologice..."></textarea>
 
         <label>Link Sketchfab (Model 3D):</label>
         <input type="text" id="input-skfb" placeholder="https://skfb.ly/...">
 
-        <label>Link-uri Poze / Filme Drive (separați prin virgulă sau linie nouă):</label>
-        <textarea id="input-media" placeholder="https://drive.google.com/file/d/... , https://youtu.be/..."></textarea>
+        <label>Link-uri Poze / Filme Drive:</label>
+        <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
 
         <div class="modal-buttons">
-            <button class="btn-salveaza" onclick="salveazaPunctNou()">Adaugă pe Hartă</button>
+            <button class="btn-salveaza" onclick="salveazaPunctNou()">Salvează Local</button>
             <button class="btn-inchide" onclick="inchideModal()">Anulează</button>
         </div>
     </div>
@@ -120,11 +118,9 @@
         L.control.layers(null, { "056-A-Pietroasa": hartaGeologica }, {collapsed: false}).addTo(map);
 
         var slideIndex = 0;
-        var puncteGeoJsonGlobale = { "type": "FeatureCollection", "features": [] };
         var layerGrupPuncte = L.layerGroup().addTo(map);
         var modSelectareCoordonate = false;
 
-        // --- GESTIUNE CARUSEL MEDIA ---
         function schimbaSlide(n) {
             var slides = document.getElementsByClassName("carusel-slide");
             if (slides.length === 0) return;
@@ -136,32 +132,6 @@
                 slides[i].classList.remove("active");
             }
             slides[slideIndex].classList.add("active");
-        }
-
-        // --- CONVERSIE LINK-URI DRIVE / YOUTUBE / SKETCHFAB ---
-        function convertesteMediaLink(link) {
-            link = link.trim();
-            // Google Drive Image
-            if (link.includes("drive.google.com") && link.includes("/d/")) {
-                var matchId = link.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                if (matchId && matchId[1]) {
-                    return `<img src="https://lh3.googleusercontent.com/d/${matchId[1]}" alt="Media Drive">`;
-                }
-            }
-            // YouTube Video Embed
-            if (link.includes("youtu.be/") || link.includes("youtube.com/watch")) {
-                var videoId = "";
-                if (link.includes("youtu.be/")) videoId = link.split("youtu.be/")[1].split("?")[0];
-                if (link.includes("watch?v=")) videoId = link.split("watch?v=")[1].split("&")[0];
-                if (videoId) {
-                    return `<iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>`;
-                }
-            }
-            // Imagine standard directă
-            if (link.startsWith("http")) {
-                return `<img src="${link}" alt="Media">`;
-            }
-            return null;
         }
 
         function obtineEmbedSketchfab(link) {
@@ -181,11 +151,9 @@
             return null;
         }
 
-        // --- AFIȘARE DETALII ÎN PANOUL DIN DREAPTA ---
         function afiseazaDetaliiPunct(props) {
             document.getElementById('titlu-afloriment').innerText = props.Identification_Code || "Afloriment";
 
-            // 1. Sketchfab
             var embedUrl = obtineEmbedSketchfab(props["3D_Model"]);
             var iframeSkfb = document.getElementById('iframe-sketchfab');
             if (embedUrl) {
@@ -196,7 +164,6 @@
                 iframeSkfb.style.display = "none";
             }
 
-            // 2. Carusel Media (Poze / Video)
             var wrapper = document.getElementById('carusel-slides-wrapper');
             wrapper.innerHTML = "";
             slideIndex = 0;
@@ -220,7 +187,6 @@
                 document.getElementById('carusel-media').style.display = "none";
             }
 
-            // 3. Text Detalii
             var textFormatat = "";
             if (props.Short_Description) textFormatat += `Descriere: ${props.Short_Description}\n`;
             if (props.Geological_Time) textFormatat += `Vârstă: ${props.Geological_Time}\n`;
@@ -244,11 +210,24 @@
             return null;
         }
 
-        // --- ÎNCĂRCARE PUNCTE DIN GEOJSON ---
-        function incarcaPunctePeHarta(data) {
-            puncteGeoJsonGlobale = data;
+        // --- ÎNCĂRCARE COMBINATĂ (GEOJSON + LOCALSTORAGE) ---
+        function incarcaToatePunctele() {
             layerGrupPuncte.clearLayers();
-            
+
+            // 1. Încărcăm fișierul de bază puncte.geojson
+            fetch('puncte.geojson')
+                .then(res => res.json())
+                .then(data => {
+                    adaugaLayerPuncte(data);
+                    incarcaPuncteSalvateLocal();
+                })
+                .catch(err => {
+                    console.log("Nu s-a putut citi puncte.geojson, se afișează doar cele locale.");
+                    incarcaPuncteSalvateLocal();
+                });
+        }
+
+        function adaugaLayerPuncte(data) {
             L.geoJSON(data, {
                 onEachFeature: function(feature, layer) {
                     layer.on('click', function(e) {
@@ -260,15 +239,20 @@
             }).addTo(layerGrupPuncte);
         }
 
-        fetch('puncte.geojson')
-            .then(res => res.json())
-            .then(data => incarcaPunctePeHarta(data))
-            .catch(err => console.log("Se folosesc doar punctele adăugate din interfață."));
+        function incarcaPuncteSalvateLocal() {
+            var puncteLocale = localStorage.getItem('puncte_modificate_pietroasa');
+            if (puncteLocale) {
+                var dataLocale = JSON.parse(puncteLocale);
+                adaugaLayerPuncte(dataLocale);
+            }
+        }
+
+        incarcaToatePunctele();
 
         // --- ADMIN / ADAUGARE PUNCTE NOI ---
         function deschideModAdaugare() {
             modSelectareCoordonate = true;
-            alert("Click pe orice loc de pe hartă pentru a prelua coordonatele noului punct!");
+            alert("Click pe hartă unde vrei să plasezi noul punct!");
         }
 
         map.on('click', function(e) {
@@ -287,13 +271,13 @@
         function salveazaPunctNou() {
             var cod = document.getElementById('input-cod').value || "H_Nou";
             var lat = parseFloat(document.getElementById('input-lat').value);
-            var lon = parseFloat(document.getElementById('input-lon').value);
+            var lon = parseFloat(document.getElementById('input-lon'].value);
             var desc = document.getElementById('input-desc').value;
             var skfb = document.getElementById('input-skfb').value;
             var media = document.getElementById('input-media').value;
 
             if (isNaN(lat) || isNaN(lon)) {
-                alert("Te rog introdu coordonate valide sau dă click pe hartă!");
+                alert("Coordonate invalide!");
                 return;
             }
 
@@ -311,20 +295,14 @@
                 }
             };
 
-            puncteGeoJsonGlobale.features.push(featureNou);
-            incarcaPunctePeHarta(puncteGeoJsonGlobale);
-            inchideModal();
+            // Salvăm curat în memorie locală separată
+            var puncteExistente = JSON.parse(localStorage.getItem('puncte_modificate_pietroasa') || '{"type": "FeatureCollection", "features": []}');
+            puncteExistente.features.push(featureNou);
+            localStorage.setItem('puncte_modificate_pietroasa', JSON.stringify(puncteExistente));
 
-            // Opțiune de export ca să poți salva permanent pe GitHub
-            if (confirm("Punct adăugat cu succes pe hartă! Vrei să descarci noul fișier puncte.geojson actualizat pentru a-l pune pe GitHub?")) {
-                var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(puncteGeoJsonGlobale, null, 2));
-                var downloadAnchor = document.createElement('a');
-                downloadAnchor.setAttribute("href", dataStr);
-                downloadAnchor.setAttribute("download", "puncte.geojson");
-                document.body.appendChild(downloadAnchor);
-                downloadAnchor.click();
-                downloadAnchor.remove();
-            }
+            inchideModal();
+            incarcaToatePunctele();
+            alert("Punctul a fost adăugat și salvat local cu succes în browserul tău!");
         }
     </script>
 </body>
