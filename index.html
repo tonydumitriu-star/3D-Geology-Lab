@@ -49,28 +49,14 @@
         };
         L.control.layers(null, straturiSuprapuse, {collapsed: false}).addTo(map);
 
-        // --- FUNCȚIE STABILĂ DE PARSARE ---
-        function gestioneazaClickPunct(eveniment) {
-            // Oprim comportamentul care mută/teleportează harta
-            if (eveniment.originalEvent) {
-                L.DomEvent.stopPropagation(eveniment.originalEvent);
-                L.DomEvent.preventDefault(eveniment.originalEvent);
-            }
-
-            var layer = eveniment.layer;
-            
-            // Preluăm proprietățile în siguranță indiferent de cum le exportă My Maps
-            var props = (layer.feature && layer.feature.properties) ? layer.feature.properties : {};
-            var numePunct = props.name || props.title || layer.options.title || "Afloriment fără titlu";
+        // --- FUNCȚIE PENTRU ACTUALIZAREA PANOULUI DIN DREAPTA ---
+        function centerPanel(props) {
+            var numePunct = props.name || props.title || "Afloriment fără titlu";
             var descriereBruta = props.description || props.popupContent || "";
-
-            if (layer.closePopup) {
-                layer.closePopup();
-            }
 
             document.getElementById('titlu-afloriment').innerText = numePunct;
 
-            // Căutare sigură a link-ului Sketchfab
+            // Căutăm link-ul Sketchfab
             var skfbRegex = /(?:skfb\.ly\/[a-zA-Z0-9]+|sketchfab\.com\/3d-models\/[^\s"<>]+)/i;
             var matchSkfb = descriereBruta.match(skfbRegex);
             
@@ -96,7 +82,7 @@
                 document.getElementById('container-3d').innerHTML = `<p style="color: #888; font-style: italic;">Niciun model 3D asociat acestui punct.</p>`;
             }
 
-            // Curățarea textului pentru afișare ordonată
+            // Curățăm textul pentru panou
             var tempDiv = document.createElement("div");
             tempDiv.innerHTML = descriereBruta;
             
@@ -120,15 +106,25 @@
             }
         }
 
-        // Inițializăm KMZ parser-ul și atașăm evenimentul pe fiecare punct în parte
-        var kmzParser = L.kmzLayer().addTo(map);
+        // Inițializăm KMZ parser-ul fără popup-uri automate
+        var kmzParser = L.kmzLayer();
         
         kmzParser.on('load', function(e) {
             e.layer.eachLayer(function (layer) {
-                layer.on('click', gestioneazaClickPunct);
+                // Dezactivăm complet popup-ul nativ ca să nu mai mute harta și să nu mai apară balonul
+                if (layer.unbindPopup) {
+                    layer.unbindPopup();
+                }
+                
+                // La click pe punct, trimitem datele direct în panoul din dreapta
+                layer.on('click', function(ev) {
+                    var props = (layer.feature && layer.feature.properties) ? layer.feature.properties : {};
+                    centerPanel(props);
+                });
             });
         });
 
+        kmzParser.addTo(map);
         kmzParser.load('puncte.kmz');
 
     </script>
