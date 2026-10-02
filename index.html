@@ -1,33 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Hartă Geologică 3D - Pietroasa</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
-    
-    <style>
-        body { display: flex; margin: 0; height: 100vh; font-family: Arial, sans-serif; background: #1e1e1e; color: #fff;}
-        #harta { width: 65%; height: 100%; }
-        #panou-info { width: 35%; height: 100%; padding: 25px; overflow-y: auto; box-sizing: border-box; border-left: 2px solid #333;}
-        .sketchfab-embed { width: 100%; height: 300px; border: none; border-radius: 8px; margin-bottom: 20px;}
-        h2 { margin-top: 0; color: #e0a96d; font-size: 22px; }
-        .detalii-text { font-size: 14px; line-height: 1.6; margin-top: 15px; color: #ddd; background: #252525; padding: 15px; border-radius: 6px; border: 1px solid #3a3a3a; white-space: pre-line; }
-    </style>
-</head>
-<body>
-
-    <div id="harta"></div>
-    <div id="panou-info">
-        <h2 id="titlu-afloriment">Selectează un punct</h2>
-        <div id="container-3d">
-            <p style="color: #888; font-style: italic;">Dă click pe un punct de pe hartă pentru a încărca modelul 3D și fișa geologică.</p>
-        </div>
-        <div id="continut-detalii"></div>
-    </div>
-
-    <script>
+<script>
         // 1. Inițializăm harta
         var map = L.map('harta', {
             zoomControl: true,
@@ -53,21 +24,16 @@
         L.control.layers(null, straturiSuprapuse, {collapsed: false}).addTo(map);
 
         // --- FUNCȚIE INTELIGENTĂ DE EXTRAGERE A DATELOR DIN KMZ ---
-        function afiseazaDetaliiKmz(e) {
-            var layer = e.layer;
-            if (!layer.feature || !layer.feature.properties) return;
-
-            var props = layer.feature.properties;
+        function afiseazaDetaliiKmz(props) {
             var numePunct = props.name || "Afloriment";
             var descriereBruta = props.description || "";
 
             document.getElementById('titlu-afloriment').innerText = numePunct;
 
-            // Căutare link Sketchfab (atât skfb.ly cât și link complet)
+            // Căutare link Sketchfab (skfb.ly sau link complet)
             var skfbRegex = /(https?:\/\/(?:www\.)?skfb\.ly\/[a-zA-Z0-9]+|https?:\/\/(?:www\.)?sketchfab\.com\/3d-models\/[^\s"<>]+)/i;
             var matchSkfb = descriereBruta.match(skfbRegex);
 
-            // Dacă nu e în descriere, căutăm în tot textul brut al proprietăților
             if (!matchSkfb) {
                 var textComplet = JSON.stringify(props);
                 matchSkfb = textComplet.match(skfbRegex);
@@ -106,7 +72,6 @@
 
             var textCurat = tempDiv.textContent || tempDiv.innerText || "";
             if (!textCurat.trim()) {
-                // Dacă descrierea e goală, afișăm atributele curat
                 textCurat = Object.entries(props)
                     .filter(([k]) => k !== 'name' && k !== 'styleUrl')
                     .map(([k, v]) => `${k}: ${v}`)
@@ -123,18 +88,34 @@
             }
         }
 
-        // Inițializăm parser-ul KMZ original care păstrează iconițele și stilurile din My Maps
+        // Inițializăm parser-ul KMZ și ascultăm evenimentul de click pe elemente
         var kmzParser = L.kmzLayer();
 
         kmzParser.on('load', function(e) {
             e.layer.eachLayer(function (layer) {
-                if (layer.unbindPopup) {
-                    layer.unbindPopup(); // Oprim balonașele enervante de pe hartă și teleportarea
+                // Dacă layer-ul are caracteristici (feature), îi punem ascultătorul de click direct
+                if (layer.feature && layer.feature.properties) {
+                    layer.on('click', function(ev) {
+                        L.DomEvent.stopPropagation(ev);
+                        if (layer.closePopup) {
+                            layer.closePopup(); // Prevenim apariția balonașului nativ
+                        }
+                        afiseazaDetaliiKmz(layer.feature.properties);
+                    });
+                } else if (layer.eachLayer) {
+                    // Dacă e un grup de layere, coborâm un nivel mai jos
+                    layer.eachLayer(function(subLayer) {
+                        if (subLayer.feature && subLayer.feature.properties) {
+                            subLayer.on('click', function(ev) {
+                                L.DomEvent.stopPropagation(ev);
+                                if (subLayer.closePopup) {
+                                    subLayer.closePopup();
+                                }
+                                afiseazaDetaliiKmz(subLayer.feature.properties);
+                            });
+                        }
+                    });
                 }
-                layer.on('click', function(ev) {
-                    L.DomEvent.stopPropagation(ev);
-                    afiseazaDetaliiKmz(ev);
-                });
             });
         });
 
@@ -142,5 +123,3 @@
         kmzParser.load('puncte.kmz');
 
     </script>
-</body>
-</html>
