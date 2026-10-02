@@ -51,21 +51,21 @@
         };
         L.control.layers(null, straturiSuprapuse, {collapsed: false}).addTo(map);
 
-        // --- FUNCȚIE DE GESTIONARE A CLICK-ULUI PE PUNCT ---
+        // --- FUNCȚIE DE GESTIONARE A CLICK-ULUI ȘI AFIȘĂRII ---
         function afiseazaDetaliiPunct(feature, layer) {
             layer.on('click', function(e) {
                 L.DomEvent.stopPropagation(e);
 
                 var props = feature.properties || {};
                 
-                // Căutăm titlul în toate proprietățile posibile exportate de Global Mapper / My Maps
-                var numePunct = props.name || props.TITLE || props.Name || props.Nume || props.denumire || "Afloriment fără titlu";
-                
-                // Căutăm descrierea sau conținutul textului
-                var descriereBruta = props.description || props.popupContent || props.DESC || props.Description || "";
+                // Căutăm titlul în orice variantă posibilă de coloană din GeoJSON
+                var numePunct = props.name || props.TITLE || props.Name || props.Nume || props.denumire || props.LABEL || "Afloriment";
 
-                // Dacă descrierea e goală, dar avem alte atribute în GeoJSON, le unim ca text
-                if (!descriereBruta && Object.keys(props).length > 0) {
+                // Adunăm toate proprietățile disponibile în caz că descrierea e sub altă cheie
+                var descriereBruta = props.description || props.popupContent || props.DESC || props.Description || "";
+                
+                // Dacă nu există o descriere standard, transformăm toate atributele într-un text ordonat
+                if (!descriereBruta || descriereBruta.trim() === "") {
                     descriereBruta = Object.entries(props)
                         .map(([key, val]) => `<b>${key}:</b> ${val}`)
                         .join("<br>");
@@ -73,7 +73,7 @@
 
                 document.getElementById('titlu-afloriment').innerText = numePunct;
 
-                // Căutare îmbunătățită pentru Sketchfab (suportă skfb.ly/XXXXX și link-uri complete)
+                // Căutare sigură pentru link-ul Sketchfab
                 var skfbRegex = /(https?:\/\/(?:www\.)?skfb\.ly\/[a-zA-Z0-9]+|https?:\/\/(?:www\.)?sketchfab\.com\/3d-models\/[^\s"<>]+)/i;
                 var matchSkfb = descriereBruta.match(skfbRegex);
                 
@@ -124,7 +124,7 @@
             });
         }
 
-        // Încărcăm fișierul GeoJSON
+        // Încărcăm fișierul GeoJSON menținând iconițele implicite/specifice
         fetch('puncte.geojson')
             .then(response => response.json())
             .then(data => {
