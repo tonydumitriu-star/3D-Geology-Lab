@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hartă Geologică 3D - Pietroasa</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        body { display: flex; margin: 0; height: 100vh; font-family: Arial, sans-serif; background: #1e1e1e; color: #fff;}
+        #harta { width: 65%; height: 100%; }
+        #panou-info { width: 35%; height: 100%; padding: 20px; overflow-y: auto; box-sizing: border-box; border-left: 2px solid #333;}
+        .sketchfab-embed { width: 100%; height: 350px; border: none; border-radius: 8px; margin-bottom: 15px;}
+        h2 { margin-top: 0; color: #e0a96d; }
+    </style>
+</head>
+<body>
+
+    <div id="harta"></div>
+    <div id="panou-info">
+        <h2 id="titlu-afloriment">Selectează un punct</h2>
+        <div id="container-3d">
+            <p>Dă click pe un marker de pe hartă pentru a încărca modelul 3D și detaliile geologice.</p>
+        </div>
+        <p id="descriere-afloriment"></p>
+    </div>
+
+    <script>
+        // 1. Inițializăm harta pe centrul zonei Pietroasa
+        var map = L.map('harta').setView([46.5833, 22.6246], 11); 
+
+        // 2. Google Maps
+        var googleSatelit = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            attribution: 'Google Satellite'
+        });
+        googleSatelit.addTo(map);
+
+        // 3. Harta Geologică
+        var imageUrl = '056-A-Pietroasa.png'; // Asigură-te că fișierul e .png (sau schimbă în .jpg)
+        var imageBounds = [[46.494811, 22.492368], [46.671815, 22.756864]]; 
+        var hartaGeologica = L.imageOverlay(imageUrl, imageBounds, {opacity: 1.0});
+        hartaGeologica.addTo(map);
+
+        // 3.1. Butonul Layer
+        var straturiSuprapuse = {
+            "056-A-Pietroasa": hartaGeologica
+        };
+        L.control.layers(null, straturiSuprapuse, {collapsed: false}).addTo(map);
+
+        // --- Sistemul de Markere (Blueprint-ul tău pentru puncte 3D) ---
+        
+        var bazaDeDate = {
+            "afloriment_pietroasa_1": {
+                titlu: "Afloriment Test Pietroasa",
+                sketchfabId: "8f8b8a514d244673bc117a552256fb89", // Schimbă cu ID-ul tău real
+                descriere: "Descrierea structurii geologice pe care o analizezi aici."
+            }
+        };
+
+        function afiseazaDetalii(id_punct) {
+            var date = bazaDeDate[id_punct];
+            document.getElementById('titlu-afloriment').innerText = date.titlu;
+            document.getElementById('descriere-afloriment').innerText = date.descriere;
+            document.getElementById('container-3d').innerHTML = `
+                <iframe class="sketchfab-embed" 
+                    src="https://sketchfab.com/models/${date.sketchfabId}/embed?autostart=1&ui_infos=0&ui_inspector=1" 
+                    allow="autoplay; fullscreen; vr">
+                </iframe>
+            `;
+        }
+
+        // Am pus un marker fix pe coordonatele centrale ca să ai un test de click
+        var marker1 = L.marker([46.5833, 22.6246]).addTo(map);
+        marker1.on('click', function() {
+            afiseazaDetalii("afloriment_pietroasa_1");
+        });
+
+    </script>
+</body>
+</html>
