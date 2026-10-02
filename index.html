@@ -5,7 +5,6 @@
     <title>Hartă Geologică 3D - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
     
     <style>
         body { display: flex; margin: 0; height: 100vh; font-family: Arial, sans-serif; background: #1e1e1e; color: #fff;}
@@ -28,8 +27,11 @@
     </div>
 
     <script>
-        // 1. Inițializăm harta
-        var map = L.map('harta').setView([46.5833, 22.6246], 11); 
+        // 1. Inițializăm harta fără efecte de centrare automată
+        var map = L.map('harta', {
+            zoomControl: true,
+            dragging: true
+        }).setView([46.5833, 22.6246], 11); 
 
         // 2. Google Satellite Base
         var googleSatelit = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
@@ -49,83 +51,79 @@
         };
         L.control.layers(null, straturiSuprapuse, {collapsed: false}).addTo(map);
 
-        // --- FUNCȚIE PENTRU ACTUALIZAREA PANOULUI DIN DREAPTA ---
-        function centerPanel(props) {
-            var numePunct = props.name || props.title || "Afloriment fără titlu";
-            var descriereBruta = props.description || props.popupContent || "";
+        // --- FUNCȚIE DE GESTIONARE A CLICK-ULUI PE PUNCT ---
+        function afiseazaDetaliiPunct(feature, layer) {
+            layer.on('click', function(e) {
+                // Oprim orice comportament nativ de zoom sau mutare a hărții
+                L.DomEvent.stopPropagation(e);
 
-            document.getElementById('titlu-afloriment').innerText = numePunct;
+                var props = feature.properties || {};
+                var numePunct = props.name || props.title || "Afloriment fără titlu";
+                var descriereBruta = props.description || props.popupContent || "";
 
-            // Căutăm link-ul Sketchfab
-            var skfbRegex = /(?:skfb\.ly\/[a-zA-Z0-9]+|sketchfab\.com\/3d-models\/[^\s"<>]+)/i;
-            var matchSkfb = descriereBruta.match(skfbRegex);
-            
-            if (matchSkfb) {
-                var linkGasit = matchSkfb[0];
-                var embedSrc = linkGasit;
-                if (linkGasit.includes("skfb.ly/")) {
-                    var codScurt = linkGasit.split("skfb.ly/")[1].trim();
-                    embedSrc = `https://sketchfab.com/models/${codScurt}/embed`;
-                } else if (linkGasit.includes("sketchfab.com/3d-models/")) {
-                    var parti = linkGasit.split("-");
-                    var potentialId = parti[parti.length - 1].trim();
-                    embedSrc = `https://sketchfab.com/models/${potentialId}/embed`;
-                }
+                // Setăm titlul corect în panou
+                document.getElementById('titlu-afloriment').innerText = numePunct;
+
+                // Căutăm link-ul Sketchfab în descriere
+                var skfbRegex = /(?:skfb\.ly\/[a-zA-Z0-9]+|sketchfab\.com\/3d-models\/[^\s"<>]+)/i;
+                var matchSkfb = descriereBruta.match(skfbRegex);
                 
-                document.getElementById('container-3d').innerHTML = `
-                    <iframe class="sketchfab-embed" 
-                        src="${embedSrc}?autostart=1&ui_infos=0&ui_inspector=1" 
-                        allow="autoplay; fullscreen; vr">
-                    </iframe>
-                `;
-            } else {
-                document.getElementById('container-3d').innerHTML = `<p style="color: #888; font-style: italic;">Niciun model 3D asociat acestui punct.</p>`;
-            }
+                if (matchSkfb) {
+                    var linkGasit = matchSkfb[0];
+                    var embedSrc = linkGasit;
+                    if (linkGasit.includes("skfb.ly/")) {
+                        var codScurt = linkGasit.split("skfb.ly/")[1].trim();
+                        embedSrc = `https://sketchfab.com/models/${codScurt}/embed`;
+                    } else if (linkGasit.includes("sketchfab.com/3d-models/")) {
+                        var parti = linkGasit.split("-");
+                        var potentialId = parti[parti.length - 1].trim();
+                        embedSrc = `https://sketchfab.com/models/${potentialId}/embed`;
+                    }
+                    
+                    document.getElementById('container-3d').innerHTML = `
+                        <iframe class="sketchfab-embed" 
+                            src="${embedSrc}?autostart=1&ui_infos=0&ui_inspector=1" 
+                            allow="autoplay; fullscreen; vr">
+                        </iframe>
+                    `;
+                } else {
+                    document.getElementById('container-3d').innerHTML = `<p style="color: #888; font-style: italic;">Niciun model 3D asociat acestui punct.</p>`;
+                }
 
-            // Curățăm textul pentru panou
-            var tempDiv = document.createElement("div");
-            tempDiv.innerHTML = descriereBruta;
-            
-            var imgs = tempDiv.getElementsByTagName('img');
-            for (var k = imgs.length - 1; k >= 0; k--) {
-                imgs[k].parentNode.removeChild(imgs[k]);
-            }
+                // Curățăm textul de imagini și de link-ul Sketchfab
+                var tempDiv = document.createElement("div");
+                tempDiv.innerHTML = descriereBruta;
+                
+                var imgs = tempDiv.getElementsByTagName('img');
+                for (var k = imgs.length - 1; k >= 0; k--) {
+                    imgs[k].parentNode.removeChild(imgs[k]);
+                }
 
-            var textCurat = tempDiv.textContent || tempDiv.innerText || "";
-            if (matchSkfb) {
-                textCurat = textCurat.replace(matchSkfb[0], '');
-            }
+                var textCurat = tempDiv.textContent || tempDiv.innerText || "";
+                if (matchSkfb) {
+                    textCurat = textCurat.replace(matchSkfb[0], '');
+                }
 
-            var containerDetalii = document.getElementById('continut-detalii');
-            if (textCurat.trim().length > 0) {
-                containerDetalii.className = "detalii-text";
-                containerDetalii.innerText = textCurat.trim();
-            } else {
-                containerDetalii.className = "";
-                containerDetalii.innerHTML = "";
-            }
+                var containerDetalii = document.getElementById('continut-detalii');
+                if (textCurat.trim().length > 0) {
+                    containerDetalii.className = "detalii-text";
+                    containerDetalii.innerText = textCurat.trim();
+                } else {
+                    containerDetalii.className = "";
+                    containerDetalii.innerHTML = "";
+                }
+            });
         }
 
-        // Inițializăm KMZ parser-ul fără popup-uri automate
-        var kmzParser = L.kmzLayer();
-        
-        kmzParser.on('load', function(e) {
-            e.layer.eachLayer(function (layer) {
-                // Dezactivăm complet popup-ul nativ ca să nu mai mute harta și să nu mai apară balonul
-                if (layer.unbindPopup) {
-                    layer.unbindPopup();
-                }
-                
-                // La click pe punct, trimitem datele direct în panoul din dreapta
-                layer.on('click', function(ev) {
-                    var props = (layer.feature && layer.feature.properties) ? layer.feature.properties : {};
-                    centerPanel(props);
-                });
-            });
-        });
-
-        kmzParser.addTo(map);
-        kmzParser.load('puncte.kmz');
+        // Încărcăm fișierul GeoJSON nativ
+        fetch('puncte.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    onEachFeature: afiseazaDetaliiPunct
+                }).addTo(map);
+            })
+            .catch(error => console.log('Eroare la încărcarea punctelor:', error));
 
     </script>
 </body>
