@@ -27,7 +27,7 @@
     </div>
 
     <script>
-        // 1. Inițializăm harta fără efecte de centrare automată
+        // 1. Inițializăm harta
         var map = L.map('harta', {
             zoomControl: true,
             dragging: true
@@ -54,18 +54,27 @@
         // --- FUNCȚIE DE GESTIONARE A CLICK-ULUI PE PUNCT ---
         function afiseazaDetaliiPunct(feature, layer) {
             layer.on('click', function(e) {
-                // Oprim orice comportament nativ de zoom sau mutare a hărții
                 L.DomEvent.stopPropagation(e);
 
                 var props = feature.properties || {};
-                var numePunct = props.name || props.title || "Afloriment fără titlu";
-                var descriereBruta = props.description || props.popupContent || "";
+                
+                // Căutăm titlul în toate proprietățile posibile exportate de Global Mapper / My Maps
+                var numePunct = props.name || props.TITLE || props.Name || props.Nume || props.denumire || "Afloriment fără titlu";
+                
+                // Căutăm descrierea sau conținutul textului
+                var descriereBruta = props.description || props.popupContent || props.DESC || props.Description || "";
 
-                // Setăm titlul corect în panou
+                // Dacă descrierea e goală, dar avem alte atribute în GeoJSON, le unim ca text
+                if (!descriereBruta && Object.keys(props).length > 0) {
+                    descriereBruta = Object.entries(props)
+                        .map(([key, val]) => `<b>${key}:</b> ${val}`)
+                        .join("<br>");
+                }
+
                 document.getElementById('titlu-afloriment').innerText = numePunct;
 
-                // Căutăm link-ul Sketchfab în descriere
-                var skfbRegex = /(?:skfb\.ly\/[a-zA-Z0-9]+|sketchfab\.com\/3d-models\/[^\s"<>]+)/i;
+                // Căutare îmbunătățită pentru Sketchfab (suportă skfb.ly/XXXXX și link-uri complete)
+                var skfbRegex = /(https?:\/\/(?:www\.)?skfb\.ly\/[a-zA-Z0-9]+|https?:\/\/(?:www\.)?sketchfab\.com\/3d-models\/[^\s"<>]+)/i;
                 var matchSkfb = descriereBruta.match(skfbRegex);
                 
                 if (matchSkfb) {
@@ -90,7 +99,7 @@
                     document.getElementById('container-3d').innerHTML = `<p style="color: #888; font-style: italic;">Niciun model 3D asociat acestui punct.</p>`;
                 }
 
-                // Curățăm textul de imagini și de link-ul Sketchfab
+                // Curățăm textul pentru panou
                 var tempDiv = document.createElement("div");
                 tempDiv.innerHTML = descriereBruta;
                 
@@ -115,7 +124,7 @@
             });
         }
 
-        // Încărcăm fișierul GeoJSON nativ
+        // Încărcăm fișierul GeoJSON
         fetch('puncte.geojson')
             .then(response => response.json())
             .then(data => {
