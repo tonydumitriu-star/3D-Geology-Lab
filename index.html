@@ -10,9 +10,8 @@
         body { display: flex; margin: 0; height: 100vh; font-family: Arial, sans-serif; background: #1e1e1e; color: #fff; }
         #harta { width: 65%; height: 100%; position: relative; }
         #panou-info { width: 35%; height: 100%; padding: 25px; overflow-y: auto; box-sizing: border-box; border-left: 2px solid #333; }
-        .sketchfab-embed { width: 100%; height: 280px; border: none; border-radius: 8px; margin-bottom: 15px; }
-        .btn-foto { display: inline-block; background: #e0a96d; color: #1e1e1e; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 15px; }
-        .btn-foto:hover { background: #f0b97d; }
+        .sketchfab-embed { width: 100%; height: 280px; border: none; border-radius: 8px; margin-bottom: 15px; display: none; }
+        .panou-img { width: 100%; max-height: 240px; object-fit: cover; border-radius: 6px; margin-bottom: 15px; border: 1px solid #444; display: none; }
         h2 { margin-top: 0; color: #e0a96d; font-size: 22px; }
         .detalii-text { font-size: 14px; line-height: 1.6; margin-top: 15px; color: #ddd; background: #252525; padding: 15px; border-radius: 6px; border: 1px solid #3a3a3a; white-space: pre-line; }
         
@@ -34,13 +33,13 @@
 <body>
 
     <div id="harta">
-        <div id="badge-versiune">Versiune: v1.0.12</div>
+        <div id="badge-versiune">Versiune: v1.0.16</div>
     </div>
 
     <div id="panou-info">
         <h2 id="titlu-afloriment">Selectează un punct</h2>
-        <div id="container-3d"></div>
-        <div id="container-imagini"></div>
+        <iframe id="iframe-sketchfab" class="sketchfab-embed" allow="autoplay; fullscreen; vr"></iframe>
+        <img id="img-afloriment" class="panou-img" alt="Fotografie afloriment">
         <div id="continut-detalii"></div>
     </div>
 
@@ -69,48 +68,55 @@
         };
         L.control.layers(null, straturiSuprapuse, {collapsed: false}).addTo(map);
 
+        // Parsare Sketchfab robustă
+        function obtineEmbedSketchfab(link) {
+            if (!link || typeof link !== 'string') return null;
+            link = link.trim();
+            if (link.includes("skfb.ly/")) {
+                var cod = link.split("skfb.ly/")[1].trim().split(/[\s/?#]+/)[0];
+                return `https://sketchfab.com/models/${cod}/embed`;
+            }
+            if (link.includes("sketchfab.com/3d-models/")) {
+                var parti = link.split("-");
+                var potentialId = parti[parti.length - 1].trim().split(/[\s/?#]+/)[0];
+                if (potentialId.length > 5) {
+                    return `https://sketchfab.com/models/${potentialId}/embed`;
+                }
+            }
+            return null;
+        }
+
         // Funcție pentru afișarea datelor în panou
         function afiseazaDetaliiJson(props) {
             var codId = props.Identification_Code || props.name || "Afloriment";
             document.getElementById('titlu-afloriment').innerText = codId;
 
-            // 1. Gestionare Sketchfab (ascundem complet fereastra dacă nu există model valid)
+            // --- 1. GESTIUNE SKETCHFAB ---
             var linkSkfb = props["3D_Model"] || "";
-            var container3d = document.getElementById('container-3d');
+            var iframeSkfb = document.getElementById('iframe-sketchfab');
+            var embedUrl = obtineEmbedSketchfab(linkSkfb);
             
-            if (linkSkfb && (linkSkfb.includes("skfb.ly") || linkSkfb.includes("sketchfab.com"))) {
-                var embedSrc = linkSkfb;
-                if (linkSkfb.includes("skfb.ly/")) {
-                    var codScurt = linkSkfb.split("skfb.ly/")[1].trim();
-                    embedSrc = `https://sketchfab.com/models/${codScurt}/embed`;
-                }
-                container3d.innerHTML = `
-                    <iframe class="sketchfab-embed" 
-                        src="${embedSrc}?autostart=1&ui_infos=0&ui_inspector=1" 
-                        allow="autoplay; fullscreen; vr">
-                    </iframe>
-                `;
-                container3d.style.display = "block";
+            if (embedUrl) {
+                iframeSkfb.src = `${embedUrl}?autostart=1&ui_infos=0&ui_inspector=1`;
+                iframeSkfb.style.display = "block";
             } else {
-                container3d.innerHTML = "";
-                container3d.style.display = "none"; // Ascundem spațiul dedicat 3D dacă punctele nu au model
+                iframeSkfb.src = "";
+                iframeSkfb.style.display = "none";
             }
 
-            // 2. Gestiune imagini (buton sigur de accesare foto direct pe serverul Google)
-            var htmlImagini = "";
+            // --- 2. GESTIUNE FOTO DIRECT DIN gx_media_links ---
+            var imgAfloriment = document.getElementById('img-afloriment');
             var mediaLinks = props.gx_media_links || "";
-            if (mediaLinks.trim() !== "") {
-                var linkuriFoto = mediaLinks.split(/[\s,]+/);
-                for (var i = 0; i < linkuriFoto.length; i++) {
-                    var fotoUrl = linkuriFoto[i].trim();
-                    if (fotoUrl.startsWith("http")) {
-                        htmlImagini += `<a href="${fotoUrl}" target="_blank" class="btn-foto">📷 Vezi fotografia aflorimentului</a><br>`;
-                    }
-                }
+            
+            if (mediaLinks.trim() !== "" && mediaLinks.startsWith("http")) {
+                imgAfloriment.src = mediaLinks.trim();
+                imgAfloriment.style.display = "block";
+            } else {
+                imgAfloriment.src = "";
+                imgAfloriment.style.display = "none";
             }
-            document.getElementById('container-imagini').innerHTML = htmlImagini;
 
-            // 3. Construim textul detaliat
+            // --- 3. CONSTRUIRE TEXT DETALII ---
             var textFormatat = "";
             if (props.KML_FOLDER) textFormatat += `Regiune/Folder: ${props.KML_FOLDER}\n`;
             if (props.Short_Description) textFormatat += `Descriere: ${props.Short_Description}\n`;
