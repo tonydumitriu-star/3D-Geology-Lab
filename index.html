@@ -5,7 +5,6 @@
     <title>Hartă Geologică 3D - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
     
     <style>
         body { display: flex; margin: 0; height: 100vh; font-family: Arial, sans-serif; background: #1e1e1e; color: #fff; }
@@ -34,8 +33,7 @@
 <body>
 
     <div id="harta">
-        <!-- Aici va apărea numărul versiunii pe ecran -->
-        <div id="badge-versiune">Versiune: v1.0.8</div>
+        <div id="badge-versiune">Versiune: v1.0.9</div>
     </div>
 
     <div id="panou-info">
@@ -47,7 +45,7 @@
     </div>
 
     <script>
-        // 1. Inițializăm harta
+        // 1. Inițializăm harta fără zoom/pan automat la click
         var map = L.map('harta', {
             zoomControl: true,
             dragging: true
@@ -71,14 +69,23 @@
         };
         L.control.layers(null, straturiSuprapuse, {collapsed: false}).addTo(map);
 
-        // Funcție pentru afișarea datelor în panou
-        function afiseazaDetalii(props) {
-            var numePunct = props.name || "Afloriment";
-            var descriereBruta = props.description || "";
+        // Funcție inteligentă pentru afișarea datelor din JSON
+        function afiseazaDetaliiJson(props) {
+            // Căutăm titlul în orice variantă posibilă de coloană
+            var numePunct = props.name || props.TITLE || props.Name || props.Nume || props.denumire || "Afloriment";
+            
+            // Căutăm descrierea sau transformăm toate proprietățile într-un text frumos dacă lipsesc
+            var descriereBruta = props.description || props.popupContent || props.DESC || props.Description || "";
+            
+            if (!descriereBruta || descriereBruta.trim() === "") {
+                descriereBruta = Object.entries(props)
+                    .map(([k, v]) => `<b>${k}:</b> ${v}`)
+                    .join("<br>");
+            }
 
             document.getElementById('titlu-afloriment').innerText = numePunct;
 
-            // Căutare link Sketchfab
+            // Căutare link Sketchfab robustă
             var skfbRegex = /(https?:\/\/(?:www\.)?skfb\.ly\/[a-zA-Z0-9]+|https?:\/\/(?:www\.)?sketchfab\.com\/3d-models\/[^\s"<>]+)/i;
             var matchSkfb = descriereBruta.match(skfbRegex);
 
@@ -119,11 +126,8 @@
             }
 
             var textCurat = tempDiv.textContent || tempDiv.innerText || "";
-            if (!textCurat.trim()) {
-                textCurat = Object.entries(props)
-                    .filter(([k]) => k !== 'name' && k !== 'styleUrl')
-                    .map(([k, v]) => `${k}: ${v}`)
-                    .join("\n");
+            if (matchSkfb) {
+                textCurat = textCurat.replace(matchSkfb[0], '');
             }
 
             var containerDetalii = document.getElementById('continut-detalii');
@@ -136,33 +140,24 @@
             }
         }
 
-        // Parsare KMZ sigură
-        var kmzParser = L.kmzLayer();
-
-        kmzParser.on('load', function(e) {
-            e.layer.eachLayer(function (layer) {
-                if (layer.feature && layer.feature.properties) {
-                    layer.on('click', function(ev) {
-                        L.DomEvent.stopPropagation(ev);
-                        if (layer.closePopup) layer.closePopup();
-                        afiseazaDetalii(layer.feature.properties);
-                    });
-                } else if (layer.eachLayer) {
-                    layer.eachLayer(function(subLayer) {
-                        if (subLayer.feature && subLayer.feature.properties) {
-                            subLayer.on('click', function(ev) {
-                                L.DomEvent.stopPropagation(ev);
-                                if (subLayer.closePopup) subLayer.closePopup();
-                                afiseazaDetalii(subLayer.feature.properties);
-                            });
-                        }
-                    });
-                }
-            });
-        });
-
-        kmzParser.addTo(map);
-        kmzParser.load('puncte.kmz');
+        // Încărcare nativă GeoJSON (fără plugin-uri externe care blochează click-ul)
+        fetch('puncte.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    onEachFeature: function(feature, layer) {
+                        layer.on('click', function(e) {
+                            // Oprim complet propagarea ca harta să nu se mute/teleporteze
+                            L.DomEvent.stopPropagation(e);
+                            if (layer.closePopup) {
+                                layer.closePopup();
+                            }
+                            afiseazaDetaliiJson(feature.properties);
+                        });
+                    }
+                }).addTo(map);
+            })
+            .catch(error => console.log('Eroare la încărcarea fișierului GeoJSON:', error));
     </script>
 </body>
 </html>
