@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>Hartă Geologică 3D - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <!-- AICI SE "INSTALEAZĂ" PLUGIN-UL (mereu sub scriptul principal de mai sus) -->
     <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
     
     <style>
         body { display: flex; margin: 0; height: 100vh; font-family: Arial, sans-serif; background: #1e1e1e; color: #fff;}
         #harta { width: 65%; height: 100%; }
         #panou-info { width: 35%; height: 100%; padding: 20px; overflow-y: auto; box-sizing: border-box; border-left: 2px solid #333;}
-        .sketchfab-embed { width: 100%; height: 350px; border: none; border-radius: 8px; margin-bottom: 15px;}
-        h2 { margin-top: 0; color: #e0a96d; }
+        .sketchfab-embed { width: 100%; height: 280px; border: none; border-radius: 8px; margin-bottom: 15px;}
+        h2 { margin-top: 0; color: #e0a96d; font-size: 20px; }
+        .detalii-text { font-size: 14px; line-height: 1.5; margin-top: 15px; color: #ddd; white-space: pre-line; }
+        .panou-img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; border: 1px solid #444; }
     </style>
 </head>
 <body>
@@ -22,73 +23,97 @@
     <div id="panou-info">
         <h2 id="titlu-afloriment">Selectează un punct</h2>
         <div id="container-3d">
-            <p>Dă click pe un marker de pe hartă pentru a încărca modelul 3D și detaliile.</p>
+            <p style="color: #888;">Dă click pe un punct de pe hartă pentru a încărca modelul 3D și detaliile.</p>
         </div>
-        <p id="descriere-afloriment"></p>
+        <div id="container-imagini"></div>
+        <div id="continut-detalii" class="detalii-text"></div>
     </div>
 
     <script>
         // 1. Inițializăm harta
         var map = L.map('harta').setView([46.5833, 22.6246], 11); 
 
-        // 2. Google Maps
+        // 2. Google Satellite Base
         var googleSatelit = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
             maxZoom: 20,
             attribution: 'Google Satellite'
         });
         googleSatelit.addTo(map);
 
-        // 3. Harta Geologică
+        // 3. Harta Geologică Overlay
         var imageUrl = '056-A-Pietroasa.png'; 
         var imageBounds = [[46.494811, 22.492368], [46.671815, 22.756864]]; 
         var hartaGeologica = L.imageOverlay(imageUrl, imageBounds, {opacity: 1.0});
         hartaGeologica.addTo(map);
 
-        // 3.1. Butonul Layer
         var straturiSuprapuse = {
             "056-A-Pietroasa": hartaGeologica
         };
         L.control.layers(null, straturiSuprapuse, {collapsed: false}).addTo(map);
 
-        // --- SISTEMUL NOU PENTRU KMZ ---
+        // --- FUNCȚIE DE PARSARE PENTRU MODEL, POZE ȘI TEXT ---
+        function gestioneazaClickPunct(eveniment) {
+            var layer = eveniment.layer;
+            var numePunct = layer.feature.properties.name || "Afloriment fără titlu";
+            var descriereBruta = layer.feature.properties.description || "";
 
-        // Funcția care se execută când dai click pe un punct (On Clicked Event)
-        function incarcaModel(eveniment) {
-            // Extragem Titlul și Descrierea din punctul KMZ
-            var numePunct = eveniment.layer.feature.properties.name;
-            var idSketchfab = eveniment.layer.feature.properties.description; 
-            
-            // Curățăm ID-ul de posibile coduri ascunse pe care le mai adaugă Google
-            if (idSketchfab) {
-                idSketchfab = idSketchfab.replace(/(<([^>]+)>)/gi, "").trim();
-            } else {
-                idSketchfab = "";
-            }
+            // Închidem popup-ul clasic de pe hartă
+            layer.closePopup();
 
-            // Setăm titlul în dreapta
+            // Setăm titlul în panou
             document.getElementById('titlu-afloriment').innerText = numePunct;
+
+            // 1. Gestionare Sketchfab
+            var skfbRegex = /(https?:\/\/(?:www\.)?(?:skfb\.ly\/[a-zA-Z0-9]+|sketchfab\.com\/3d-models\/[^\s"<>]+))/i;
+            var matchSkfb = descriereBruta.match(skfbRegex);
             
-            // Dacă am găsit un ID valid în descriere, încărcăm iframe-ul
-            if (idSketchfab.length > 5) {
+            if (matchSkfb) {
+                var skfbLink = matchSkfb[1];
+                var embedSrc = skfbLink;
+                if (skfbLink.includes("skfb.ly/")) {
+                    var codScurt = skfbLink.split("skfb.ly/")[1].trim();
+                    embedSrc = `https://sketchfab.com/models/${codScurt}/embed`;
+                }
                 document.getElementById('container-3d').innerHTML = `
                     <iframe class="sketchfab-embed" 
-                        src="https://sketchfab.com/models/${idSketchfab}/embed?autostart=1&ui_infos=0&ui_inspector=1" 
+                        src="${embedSrc}?autostart=1&ui_infos=0&ui_inspector=1" 
                         allow="autoplay; fullscreen; vr">
                     </iframe>
                 `;
-                document.getElementById('descriere-afloriment').innerText = "Model 3D interactiv.";
             } else {
-                // Dacă punctul nu are ID (e doar un marker de ghidaj)
-                document.getElementById('container-3d').innerHTML = "<p>Niciun model 3D asociat acestui punct.</p>";
-                document.getElementById('descriere-afloriment').innerText = "Lipsește ID-ul Sketchfab din My Maps.";
+                document.getElementById('container-3d').innerHTML = `<p style="color: #888; font-style: italic;">Niciun model 3D asociat acestui punct.</p>`;
             }
+
+            // 2. Extragerea imaginilor din descriere
+            var tempDiv = document.createElement("div");
+            tempDiv.innerHTML = descriereBruta;
+            
+            var imgTags = tempDiv.getElementsByTagName("img");
+            var htmlImagini = "";
+            for (var i = 0; i < imgTags.length; i++) {
+                var imgSrc = imgTags[i].src;
+                if (imgSrc) {
+                    htmlImagini += `<img src="${imgSrc}" class="panou-img" alt="Imagine afloriment">`;
+                }
+            }
+            document.getElementById('container-imagini').innerHTML = htmlImagini;
+
+            // 3. Curățarea textului pentru afișare ordonată în panou
+            for (var j = imgTags.length - 1; j >= 0; j--) {
+                imgTags[j].parentNode.removeChild(imgTags[j]);
+            }
+            
+            var textCurat = tempDiv.textContent || tempDiv.innerText || "";
+            if (matchSkfb) {
+                textCurat = textCurat.replace(matchSkfb[1], '');
+            }
+
+            document.getElementById('continut-detalii').innerText = textCurat.trim();
         }
 
-        // Inițializăm plugin-ul și îi spunem să asculte click-urile
+        // Inițializăm KMZ parser-ul
         var kmzParser = L.kmzLayer().addTo(map);
-        kmzParser.on('click', incarcaModel);
-
-        // Încărcăm fișierul tău fizic de lângă index.html
+        kmzParser.on('click', gestioneazaClickPunct);
         kmzParser.load('puncte.kmz');
 
     </script>
