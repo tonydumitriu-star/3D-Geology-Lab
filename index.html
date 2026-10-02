@@ -14,7 +14,6 @@
         h2 { margin-top: 0; color: #e0a96d; font-size: 22px; }
         .detalii-text { font-size: 14px; line-height: 1.6; margin-top: 15px; color: #ddd; background: #252525; padding: 15px; border-radius: 6px; border: 1px solid #3a3a3a; white-space: pre-line; }
         
-        /* Stil pentru indicatorul de versiune */
         #badge-versiune {
             position: absolute;
             bottom: 10px;
@@ -33,7 +32,7 @@
 <body>
 
     <div id="harta">
-        <div id="badge-versiune">Versiune: v1.0.9</div>
+        <div id="badge-versiune">Versiune: v1.0.10</div>
     </div>
 
     <div id="panou-info">
@@ -45,7 +44,7 @@
     </div>
 
     <script>
-        // 1. Inițializăm harta fără zoom/pan automat la click
+        // 1. Inițializăm harta
         var map = L.map('harta', {
             zoomControl: true,
             dragging: true
@@ -69,43 +68,21 @@
         };
         L.control.layers(null, straturiSuprapuse, {collapsed: false}).addTo(map);
 
-        // Funcție inteligentă pentru afișarea datelor din JSON
+        // Funcție adaptată exact pe structura JSON trimisă de tine
         function afiseazaDetaliiJson(props) {
-            // Căutăm titlul în orice variantă posibilă de coloană
-            var numePunct = props.name || props.TITLE || props.Name || props.Nume || props.denumire || "Afloriment";
-            
-            // Căutăm descrierea sau transformăm toate proprietățile într-un text frumos dacă lipsesc
-            var descriereBruta = props.description || props.popupContent || props.DESC || props.Description || "";
-            
-            if (!descriereBruta || descriereBruta.trim() === "") {
-                descriereBruta = Object.entries(props)
-                    .map(([k, v]) => `<b>${k}:</b> ${v}`)
-                    .join("<br>");
-            }
+            // Preluăm codul de identificare ca titlu principal (ex: H226-3D sau altele)
+            var codId = props.Identification_Code || props.name || "Afloriment";
+            document.getElementById('titlu-afloriment').innerText = codId;
 
-            document.getElementById('titlu-afloriment').innerText = numePunct;
-
-            // Căutare link Sketchfab robustă
-            var skfbRegex = /(https?:\/\/(?:www\.)?skfb\.ly\/[a-zA-Z0-9]+|https?:\/\/(?:www\.)?sketchfab\.com\/3d-models\/[^\s"<>]+)/i;
-            var matchSkfb = descriereBruta.match(skfbRegex);
-
-            if (!matchSkfb) {
-                var textComplet = JSON.stringify(props);
-                matchSkfb = textComplet.match(skfbRegex);
-            }
+            // Preluăm direct link-ul de Sketchfab din proprietatea dedicată
+            var linkSkfb = props["3D_Model"] || "";
             
-            if (matchSkfb) {
-                var linkGasit = matchSkfb[0];
-                var embedSrc = linkGasit;
-                if (linkGasit.includes("skfb.ly/")) {
-                    var codScurt = linkGasit.split("skfb.ly/")[1].trim();
+            if (linkSkfb && linkSkfb.trim() !== "") {
+                var embedSrc = linkSkfb;
+                if (linkSkfb.includes("skfb.ly/")) {
+                    var codScurt = linkSkfb.split("skfb.ly/")[1].trim();
                     embedSrc = `https://sketchfab.com/models/${codScurt}/embed`;
-                } else if (linkGasit.includes("sketchfab.com/3d-models/")) {
-                    var parti = linkGasit.split("-");
-                    var potentialId = parti[parti.length - 1].trim();
-                    embedSrc = `https://sketchfab.com/models/${potentialId}/embed`;
                 }
-                
                 document.getElementById('container-3d').innerHTML = `
                     <iframe class="sketchfab-embed" 
                         src="${embedSrc}?autostart=1&ui_infos=0&ui_inspector=1" 
@@ -116,38 +93,31 @@
                 document.getElementById('container-3d').innerHTML = `<p style="color: #888; font-style: italic;">Niciun model 3D asociat acestui punct.</p>`;
             }
 
-            // Curățare text
-            var tempDiv = document.createElement("div");
-            tempDiv.innerHTML = descriereBruta;
-            
-            var imgs = tempDiv.getElementsByTagName('img');
-            for (var k = imgs.length - 1; k >= 0; k--) {
-                imgs[k].parentNode.removeChild(imgs[k]);
-            }
-
-            var textCurat = tempDiv.textContent || tempDiv.innerText || "";
-            if (matchSkfb) {
-                textCurat = textCurat.replace(matchSkfb[0], '');
-            }
+            // Construim textul detaliat din câmpurile GeoJSON
+            var textFormatat = "";
+            if (props.KML_FOLDER) textFormatat += `Regiune/Folder: ${props.KML_FOLDER}\n`;
+            if (props.Short_Description) textFormatat += `Descriere: ${props.Short_Description}\n`;
+            if (props.Geological_Time || props.Geological_age) textFormatat += `Vârstă geologică: ${props.Geological_Time || props.Geological_age}\n`;
+            if (props.Other) textFormatat += `Altele: ${props.Other}\n`;
+            if (props.References) textFormatat += `Referințe: ${props.References}`;
 
             var containerDetalii = document.getElementById('continut-detalii');
-            if (textCurat.trim().length > 0) {
+            if (textFormatat.trim().length > 0) {
                 containerDetalii.className = "detalii-text";
-                containerDetalii.innerText = textCurat.trim();
+                containerDetalii.innerText = textFormatat.trim();
             } else {
                 containerDetalii.className = "";
                 containerDetalii.innerHTML = "";
             }
         }
 
-        // Încărcare nativă GeoJSON (fără plugin-uri externe care blochează click-ul)
+        // Încărcare GeoJSON nativă, fără teleportare
         fetch('puncte.geojson')
             .then(response => response.json())
             .then(data => {
                 L.geoJSON(data, {
                     onEachFeature: function(feature, layer) {
                         layer.on('click', function(e) {
-                            // Oprim complet propagarea ca harta să nu se mute/teleporteze
                             L.DomEvent.stopPropagation(e);
                             if (layer.closePopup) {
                                 layer.closePopup();
