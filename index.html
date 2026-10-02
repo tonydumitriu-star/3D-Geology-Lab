@@ -9,16 +9,35 @@
     
     <style>
         body { display: flex; margin: 0; height: 100vh; font-family: Arial, sans-serif; background: #1e1e1e; color: #fff; }
-        #harta { width: 65%; height: 100%; }
+        #harta { width: 65%; height: 100%; position: relative; }
         #panou-info { width: 35%; height: 100%; padding: 25px; overflow-y: auto; box-sizing: border-box; border-left: 2px solid #333; }
         .sketchfab-embed { width: 100%; height: 300px; border: none; border-radius: 8px; margin-bottom: 20px; }
         h2 { margin-top: 0; color: #e0a96d; font-size: 22px; }
         .detalii-text { font-size: 14px; line-height: 1.6; margin-top: 15px; color: #ddd; background: #252525; padding: 15px; border-radius: 6px; border: 1px solid #3a3a3a; white-space: pre-line; }
+        
+        /* Stil pentru indicatorul de versiune */
+        #badge-versiune {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #e0a96d;
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+            z-index: 1000;
+            border: 1px solid #444;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
 
-    <div id="harta"></div>
+    <div id="harta">
+        <!-- Aici va apărea numărul versiunii pe ecran -->
+        <div id="badge-versiune">Versiune: v1.0.8</div>
+    </div>
+
     <div id="panou-info">
         <h2 id="titlu-afloriment">Selectează un punct</h2>
         <div id="container-3d">
