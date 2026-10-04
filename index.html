@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Ciocan Simplu - Pietroasa</title>
+    <title>Hartă Geologică 3D & Marker Stilizat Roșu - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
@@ -42,24 +42,37 @@
         .btn-editeaza-selectat { background: #2196F3; color: white; display: none; margin-top: 15px; width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-editeaza-selectat:hover { background: #0b7dda; }
         
-        /* Doar ciocănelul, fără cerc sau fundal */
+        /* Marker Stilizat Geologic (Pin Roșu cu nucleu alb și contur fin) */
         .marker-afloriment {
-            background: transparent;
-            border: none;
-            text-align: center;
-            font-size: 22px;
-            line-height: 24px;
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            border: 2px solid #ffffff;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            width: 24px;
+            height: 24px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.6);
             cursor: pointer;
-            filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.8));
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: transform 0.2s;
         }
         .marker-afloriment:hover {
-            transform: scale(1.3);
+            transform: rotate(-45deg) scale(1.2);
+        }
+        /* Punctul din interiorul pinului pentru contrast suplimentar */
+        .marker-afloriment::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #ffffff;
+            border-radius: 50%;
+            transform: rotate(45deg);
         }
 
         /* Stil Personalizat pentru Clustere */
         .custom-cluster-icon {
-            background: rgba(33, 150, 243, 0.9);
+            background: rgba(33, 150, 243, 0.95);
             border: 2px solid #ffffff;
             border-radius: 50%;
             text-align: center;
@@ -118,7 +131,7 @@
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
             <button class="btn-actiune btn-refresh" onclick="reprospateazaHartaFortat()">🔄 Reîmprospătează Forțat</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.65</div>
+        <div id="badge-versiune">Versiune: v1.0.66</div>
     </div>
 
     <!-- Panou Informații -->
@@ -452,12 +465,12 @@
                 var latlng = [coords[1], coords[0]];
                 var numarIndex = index + 1;
 
-                // Doar ciocănelul, fără nicio bulă sau cerc în jur
+                // Marker stilizat roșu-aprins cu punct alb în mijloc, vizibil perfect pe orice fundal
                 var customIcon = L.divIcon({
                     className: 'custom-div-icon',
-                    html: `<div class="marker-afloriment">🔨</div>`,
-                    iconSize: [28, 28],
-                    iconAnchor: [14, 14]
+                    html: `<div class="marker-afloriment"></div>`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 24]
                 });
 
                 var marker = L.marker(latlng, { icon: customIcon });
@@ -582,7 +595,7 @@
 
             alert(`Punctul "${cod}" a fost salvat cu succes în sesiune!`);
             document.getElementById('modal-punct').style.display = "none";
-            if (pinMobil) {
+            if (pin-pinMobil) {
                 map.removeLayer(pinMobil);
                 pinMobil = null;
             }
