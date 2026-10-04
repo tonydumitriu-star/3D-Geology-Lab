@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Fix Sketchfab & Straturi - Pietroasa</title>
+    <title>Hartă Geologică 3D & UI Fix - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -26,7 +26,7 @@
         h2 { margin-top: 0; color: #e0a96d; font-size: 22px; }
         .detalii-text { font-size: 14px; line-height: 1.6; margin-top: 15px; color: #ddd; background: #252525; padding: 15px; border-radius: 6px; border: 1px solid #3a3a3a; white-space: pre-line; }
         
-        /* Butoane sus în dreapta */
+        /* Butoane sus în dreapta (libere acum) */
         .btn-grup { position: absolute; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
         .btn-actiune { background: #e0a96d; color: #1e1e1e; border: none; padding: 10px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .btn-actiune:hover { background: #f0b97d; }
@@ -49,17 +49,16 @@
             line-height: 24px;
         }
 
-        /* Control straturi fixat strict în dreapta jos */
-        .leaflet-bottom.leaflet-right { 
-            bottom: 35px !important; 
-            right: 15px !important; 
+        /* Control straturi mutat în stânga-sus (sub butoanele de zoom) */
+        .leaflet-top.leaflet-left {
+            top: 70px;
         }
         .leaflet-control-layers {
             background: rgba(30, 30, 30, 0.95) !important;
             color: #fff !important;
             border: 1px solid #555 !important;
             border-radius: 6px !important;
-            padding: 10px !important;
+            padding: 8px !important;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5) !important;
         }
         .leaflet-control-layers-expanded { color: #fff !important; background: rgba(30, 30, 30, 0.98) !important; }
@@ -99,7 +98,7 @@
             <button class="btn-actiune" onclick="activeazaModDragDrop()">+ Adaugă Punct Nou</button>
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.43</div>
+        <div id="badge-versiune">Versiune: v1.0.44</div>
     </div>
 
     <!-- Panou Informații -->
@@ -137,7 +136,7 @@
         <textarea id="input-desc" placeholder="Descriere afloriment..."></textarea>
 
         <label>Link Sketchfab (Model 3D):</label>
-        <input type="text" id="input-skfb" placeholder="https://skfb.ly/...">
+        <input type="text" id="input-skfb" placeholder="https://skfb.ly/... sau link-ul complet">
 
         <label>Link-uri Poze / Filme Drive:</label>
         <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
@@ -171,7 +170,7 @@
         var hartaGeologica = L.imageOverlay(imageUrl, imageBounds, {opacity: 1.0});
         hartaGeologica.addTo(map);
 
-        // Control straturi mutat explicit în dreapta jos
+        // Control straturi mutat în stânga-sus, sub controalele de zoom
         var controlStraturi = L.control.layers(null, { "056-A-Pietroasa": hartaGeologica }, {collapsed: false});
         controlStraturi.addTo(map);
 
@@ -199,7 +198,7 @@
             slides[slideIndex].classList.add("active");
         }
 
-        // Parsare Sketchfab ultra-robustă (reparată complet)
+        // Parsare Sketchfab extrem de sigură și flexibilă
         function obtineEmbedSketchfab(link) {
             if (!link || typeof link !== 'string') return null;
             link = link.trim();
@@ -211,23 +210,22 @@
                 }
             }
             
-            if (link.includes("sketchfab.com/models/")) {
-                var part = link.split("sketchfab.com/models/")[1];
-                var idModel = part.split("/")[0];
-                return `https://sketchfab.com/models/${idModel}/embed`;
+            // Dacă conține deja /embed extras
+            if (link.includes("/embed")) {
+                return link.split("?")[0];
             }
             
+            // Dacă e link scurt de tip skfb.ly/XXXXX
             if (link.includes("skfb.ly/")) {
                 var codScurt = link.split("skfb.ly/")[1].trim().split(/[\s/?#]+/)[0];
                 return `https://sketchfab.com/models/${codScurt}/embed`;
             }
             
-            if (link.includes("sketchfab.com/3d-models/")) {
-                var segmente = link.split('/');
-                for (var i = 0; i < segmente.length; i++) {
-                    if (segmente[i].length === 32) {
-                        return `https://sketchfab.com/models/${segmente[i]}/embed`;
-                    }
+            // Dacă e link de tip sketchfab.com/3d-models/... sau similar care conține ID-ul de 32 caractere
+            var segmente = link.split('/');
+            for (var i = 0; i < segmente.length; i++) {
+                if (segmente[i].length === 32) {
+                    return `https://sketchfab.com/models/${segmente[i]}/embed`;
                 }
             }
             
