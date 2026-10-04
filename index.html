@@ -59,7 +59,7 @@
 
     <div id="harta">
         <button id="btn-toggle-admin" onclick="activeazaModDragDrop()">+ Adaugă Punct (Drag & Drop)</button>
-        <div id="badge-versiune">Versiune: v1.0.34</div>
+        <div id="badge-versiune">Versiune: v1.0.35</div>
     </div>
 
     <!-- Panou Informații -->
@@ -80,7 +80,7 @@
     <!-- Modal Generator Cod JSON -->
     <div id="modal-admin">
         <h3>Generator Punct GeoJSON (Drag & Drop)</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top:0;">Trage bulina roșie pe hartă exact unde ai nevoie, apoi completează datele de mai jos.</p>
+        <p style="font-size: 12px; color: #aaa; margin-top:0;">Trage bulina roșie pe hartă exact unde ai nevoie, apoi completează datele.</p>
         
         <label>Cod Identificare (ex: H100):</label>
         <input type="text" id="input-cod" placeholder="H100">
@@ -94,7 +94,7 @@
         <label>Descriere / Vârstă geologică:</label>
         <textarea id="input-desc" placeholder="Descriere afloriment..."></textarea>
 
-        <label>Link Sketchfab (Model 3D):</label>
+        <label>Link Sketchfab (Model 3D - skfb.ly, link normal sau HTML iframe):</label>
         <input type="text" id="input-skfb" placeholder="https://skfb.ly/...">
 
         <label>Link-uri Poze / Filme Drive:</label>
@@ -126,7 +126,7 @@
         }, 200);
 
         var slideIndex = 0;
-        var pinMobil = null; // Pinul pe care îl poți trage cu mouse-ul
+        var pinMobil = null;
 
         function schimbaSlide(n) {
             var slides = document.getElementsByClassName("carusel-slide");
@@ -141,9 +141,19 @@
             slides[slideIndex].classList.add("active");
         }
 
+        // Funcție Sketchfab extrem de flexibilă (suportă link scurt, lung sau cod complet iframe)
         function obtineEmbedSketchfab(link) {
             if (!link || typeof link !== 'string') return null;
             link = link.trim();
+            
+            // Dacă utilizatorul a pus tot codul HTML de la iframe
+            if (link.includes("<iframe")) {
+                var matchSrc = link.match(/src="([^"]+)"/);
+                if (matchSrc && matchSrc[1]) {
+                    link = matchSrc[1];
+                }
+            }
+            
             if (link.includes("/embed")) {
                 return link.split("?")[0];
             }
@@ -253,20 +263,17 @@
                 map.removeLayer(pinMobil);
             }
 
-            // Cream un cerc roșu mare care poate fi tras cu mouse-ul (draggable: true)
             pinMobil = L.circleMarker([centru.lat, centru.lng], {
                 radius: 14,
                 color: '#ffffff',
                 weight: 3,
                 fillColor: '#ff0033',
                 fillOpacity: 1.0,
-                draggable: true // Permite mutarea manuală
+                draggable: true
             }).addTo(map);
 
-            // Facem cercul interactiv pentru drag manual
             pinMobil.bindPopup("<b>Trage-mă cu mouse-ul!</b><br>Pune-mă exact pe afloriment.").openPopup();
 
-            // Actualizăm câmpurile din formular automat când utilizatorul mută pinul
             function actualizeazaCoordonatePin() {
                 var latlng = pinMobil.getLatLng();
                 document.getElementById('input-lat').value = latlng.lat.toFixed(6);
@@ -275,7 +282,6 @@
 
             actualizeazaCoordonatePin();
 
-            // Evenimente de tragere (Drag)
             var isDragging = false;
             pinMobil.on('mousedown', function() { isDragging = true; map.dragging.disable(); });
             map.on('mousemove', function(e) {
