@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Editare Puncte - Pietroasa</title>
+    <title>Hartă Geologică 3D & Meniu Dedicat GeoJSON - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -26,23 +26,27 @@
         h2 { margin-top: 0; color: #e0a96d; font-size: 22px; }
         .detalii-text { font-size: 14px; line-height: 1.6; margin-top: 15px; color: #ddd; background: #252525; padding: 15px; border-radius: 6px; border: 1px solid #3a3a3a; white-space: pre-line; }
         
-        .btn-grup { position: absolute; top: 120px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
-        .btn-actiune { background: #e0a96d; color: #1e1e1e; border: none; padding: 10px 15px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); text-align: center; }
+        /* Meniul de sus din dreapta pentru butoanele de admin */
+        .btn-grup { position: absolute; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+        .btn-actiune { background: #e0a96d; color: #1e1e1e; border: none; padding: 10px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .btn-actiune:hover { background: #f0b97d; }
+        .btn-export { background: #4CAF50; color: white; }
+        .btn-export:hover { background: #45a049; }
+
         .btn-editeaza-selectat { background: #2196F3; color: white; display: none; margin-top: 15px; width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-editeaza-selectat:hover { background: #0b7dda; }
         
-        #modal-admin { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; border: 2px solid #e0a96d; padding: 25px; z-index: 2000; width: 500px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
-        #modal-admin h3 { margin-top: 0; color: #e0a96d; }
-        #modal-admin label { display: block; margin-top: 10px; font-size: 13px; color: #ccc; }
-        #modal-admin input, #modal-admin textarea { width: 100%; padding: 8px; margin-top: 5px; background: #1e1e1e; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
-        #modal-admin textarea { height: 60px; resize: vertical; }
-        .modal-buttons { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; }
-        .modal-buttons button { padding: 8px 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; flex: 1; }
-        .btn-adauga { background: #ff9800; color: white; }
-        .btn-genereaza { background: #4CAF50; color: white; }
-        .btn-inchide { background: #f44336; color: white; flex: 0.5; }
-        #rezultat-json { font-family: monospace; font-size: 11px; background: #111; color: #a6e22e; height: 120px; }
+        /* Ferestre Modale */
+        .modal-admin { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; border: 2px solid #e0a96d; padding: 25px; z-index: 2000; width: 520px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
+        .modal-admin h3 { margin-top: 0; color: #e0a96d; }
+        .modal-admin label { display: block; margin-top: 10px; font-size: 13px; color: #ccc; }
+        .modal-admin input, .modal-admin textarea { width: 100%; padding: 8px; margin-top: 5px; background: #1e1e1e; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        .modal-admin textarea { height: 70px; resize: vertical; }
+        .modal-buttons { margin-top: 15px; display: flex; gap: 10px; justify-content: space-between; }
+        .modal-buttons button { padding: 8px 15px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; flex: 1; }
+        .btn-salveaza { background: #ff9800; color: white; }
+        .btn-inchide { background: #f44336; color: white; }
+        #rezultat-json { font-family: monospace; font-size: 11px; background: #111; color: #a6e22e; height: 250px; }
 
         #badge-versiune {
             position: absolute;
@@ -62,10 +66,12 @@
 <body>
 
     <div id="harta">
+        <!-- Meniu Dedicat Sus în Dreptul Hărții -->
         <div class="btn-grup">
             <button class="btn-actiune" onclick="activeazaModDragDrop()">+ Adaugă Punct Nou</button>
+            <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.39</div>
+        <div id="badge-versiune">Versiune: v1.0.40</div>
     </div>
 
     <!-- Panou Informații -->
@@ -82,15 +88,13 @@
 
         <div id="continut-detalii"></div>
         
-        <!-- Buton care apare când selectezi un punct existent pentru a-l edita -->
         <button id="btn-editeaza" class="btn-editeaza-selectat" onclick="deschideModEditarePunctCurent()">Editează acest punct</button>
     </div>
 
-    <!-- Modal Admin (Adăugare / Editare) -->
-    <div id="modal-admin">
+    <!-- Modal 1: Adăugare / Editare Punct -->
+    <div id="modal-punct" class="modal-admin">
         <h3 id="modal-titlu">Administrare Punct GeoJSON</h3>
-        <p id="modal-descriere-text" style="font-size: 12px; color: #aaa; margin-top:0;">Completează datele și salvează modificarea.</p>
-        <p id="contor-sesiune" style="font-size: 12px; color: #00ffcc; font-weight: bold; margin: 5px 0;"></p>
+        <p id="modal-descriere-text" style="font-size: 12px; color: #aaa; margin-top:0;">Completează datele și salvează.</p>
         
         <label>Cod Identificare (ex: H101):</label>
         <input type="text" id="input-cod" placeholder="H101">
@@ -110,13 +114,22 @@
         <label>Link-uri Poze / Filme Drive:</label>
         <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
 
-        <label>Codul GeoJSON Complet (include modificările):</label>
-        <textarea id="rezultat-json" readonly placeholder="Apasă 'Generează GeoJSON Final' când ai terminat..."></textarea>
+        <div class="modal-buttons" style="margin-top: 20px;">
+            <button class="btn-salveaza" onclick="salveazaPunctInSesiune()">Salvează Punctul</button>
+            <button class="btn-inchide" onclick="inchideModalPunct()">Anulează</button>
+        </div>
+    </div>
 
-        <div class="modal-buttons">
-            <button class="btn-adauga" id="btn-salveaza-modal" onclick="salveazaPunctInSesiune()">+ Salvează în Sesiune</button>
-            <button class="btn-genereaza" onclick="genereazaGeoJSONFinal()">Generează GeoJSON Final</button>
-            <button class="btn-inchide" onclick="inchideModal()">Închide</button>
+    <!-- Modal 2: Vizualizare Cod GeoJSON Final -->
+    <div id="modal-export" class="modal-admin">
+        <h3>Codul GeoJSON Final (Complet)</h3>
+        <p style="font-size: 12px; color: #aaa; margin-top:0;">Copiază tot acest cod și înlocuiește conținutul fișierului tău `puncte.geojson`.</p>
+        
+        <textarea id="rezultat-json" readonly></textarea>
+
+        <div class="modal-buttons" style="margin-top: 20px;">
+            <button class="btn-salveaza" onclick="copiazaCodulInMemorie()" style="background: #2196F3;">Copiază în Clipboard</button>
+            <button class="btn-inchide" onclick="inchideModalExport()">Închide</button>
         </div>
     </div>
 
@@ -139,9 +152,9 @@
         var slideIndex = 0;
         var pinMobil = null;
         var toatePuncteleExistente = []; 
-        var puncteModificateSauNoi = {}; // Reține modificările sau punctele noi după codul de identificare
+        var puncteModificateSauNoi = {}; 
         var layerPuncteHarta = L.layerGroup().addTo(map);
-        var punctCurentSelectat = null; // Ține minte ce punct am selectat pentru editare
+        var punctCurentSelectat = null;
 
         function schimbaSlide(n) {
             var slides = document.getElementsByClassName("carusel-slide");
@@ -185,7 +198,7 @@
 
         function afiseazaDetaliiPunct(feature) {
             var props = feature.properties;
-            punctCurentSelectat = feature; // Salvăm referința punctului selectat
+            punctCurentSelectat = feature;
             
             document.getElementById('titlu-afloriment').innerText = props.Identification_Code || props.name || "Afloriment";
 
@@ -232,7 +245,6 @@
             document.getElementById('continut-detalii').className = textFormatat ? "detalii-text" : "";
             document.getElementById('continut-detalii').innerText = textFormatat;
 
-            // Afișăm butonul de editare pentru acest punct
             document.getElementById('btn-editeaza').style.display = "block";
         }
 
@@ -259,16 +271,14 @@
                         toatePuncteleExistente = data.features;
                     }
                     
-                    // Combinăm cu modificările făcute în sesiune
                     var toatePuncteleFinal = toatePuncteleExistente.map(function(pt) {
                         var cod = pt.properties.Identification_Code;
                         if (cod && puncteModificateSauNoi[cod]) {
-                            return puncteModificateSauNoi[cod]; // Luăm versiunea editată
+                            return puncteModificateSauNoi[cod];
                         }
                         return pt;
                     });
 
-                    // Adăugăm și punctele complet noi care nu existau înainte
                     for (var cod in puncteModificateSauNoi) {
                         var eNou = true;
                         for (var i = 0; i < toatePuncteleExistente.length; i++) {
@@ -312,7 +322,6 @@
 
             document.getElementById('modal-titlu').innerText = "Adaugă Punct Nou";
             document.getElementById('modal-descriere-text').innerText = "Trage bulina roșie pe hartă exact unde ai nevoie.";
-            document.getElementById('btn-salveaza-modal').innerText = "+ Adaugă în Sesiune";
 
             document.getElementById('input-cod').value = "";
             document.getElementById('input-lat').value = centru.lat.toFixed(6);
@@ -352,11 +361,11 @@
                     isDragging = false;
                     map.dragging.enable();
                     actualizeazaCoordonatePin();
-                    document.getElementById('modal-admin').style.display = "block";
+                    document.getElementById('modal-punct').style.display = "block";
                 }
             });
 
-            document.getElementById('modal-admin').style.display = "block";
+            document.getElementById('modal-punct').style.display = "block";
         }
 
         function deschideModEditarePunctCurent() {
@@ -366,18 +375,17 @@
             var coords = punctCurentSelectat.geometry.coordinates;
 
             document.getElementById('modal-titlu').innerText = "Editează Punctul: " + (props.Identification_Code || "");
-            document.getElementById('modal-descriere-text').innerText = "Modifică detaliile de mai jos și apasă Salvează.";
-            document.getElementById('btn-salveaza-modal').innerText = "Salvează Modificarea";
+            document.getElementById('modal-descriere-text').innerText = "Modifică detaliile și apasă Salvează Punctul.";
 
             document.getElementById('input-cod').value = props.Identification_Code || "";
-            document.getElementById('input-cod').readOnly = true; // Codul rămâne fix ca să știm ce punct edităm
+            document.getElementById('input-cod').readOnly = true; 
             document.getElementById('input-lat').value = coords[1].toFixed(6);
             document.getElementById('input-lon').value = coords[0].toFixed(6);
             document.getElementById('input-desc').value = props.Short_Description || "";
             document.getElementById('input-skfb').value = props["3D_Model"] || "";
             document.getElementById('input-media').value = props.gx_media_links || "";
 
-            document.getElementById('modal-admin').style.display = "block";
+            document.getElementById('modal-punct').style.display = "block";
         }
 
         function salveazaPunctInSesiune() {
@@ -410,17 +418,17 @@
             puncteModificateSauNoi[cod] = featureModificat;
 
             alert(`Punctul "${cod}" a fost salvat cu succes în sesiune!`);
-            document.getElementById('modal-admin').style.display = "none";
+            document.getElementById('modal-punct').style.display = "none";
             if (pinMobil) {
                 map.removeLayer(pinMobil);
                 pinMobil = null;
             }
 
-            incarcaHartaPuncte(); // Reîmprospătăm harta instant
-            afiseazaDetaliiPunct(featureModificat); // Actualizăm și panoul din dreapta
+            incarcaHartaPuncte(); 
+            afiseazaDetaliiPunct(featureModificat); 
         }
 
-        function genereazaGeoJSONFinal() {
+        function deschideModalExport() {
             var toatePuncteleFinal = toatePuncteleExistente.map(function(pt) {
                 var cod = pt.properties.Identification_Code;
                 if (cod && puncteModificateSauNoi[cod]) {
@@ -448,15 +456,26 @@
             };
 
             document.getElementById('rezultat-json').value = JSON.stringify(colectieFinala, null, 2);
-            document.getElementById('modal-admin').style.display = "block";
+            document.getElementById('modal-export').style.display = "block";
         }
 
-        function inchideModal() {
-            document.getElementById('modal-admin').style.display = "none";
+        function copiazaCodulInMemorie() {
+            var textarea = document.getElementById('rezultat-json');
+            textarea.select();
+            document.execCommand('copy');
+            alert("Codul GeoJSON a fost copiat în clipboard!");
+        }
+
+        function inchideModalPunct() {
+            document.getElementById('modal-punct').style.display = "none";
             if (pinMobil) {
                 map.removeLayer(pinMobil);
                 pinMobil = null;
             }
+        }
+
+        function inchideModalExport() {
+            document.getElementById('modal-export').style.display = "none";
         }
     </script>
 </body>
