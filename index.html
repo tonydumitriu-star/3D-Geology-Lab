@@ -59,7 +59,7 @@
 
     <div id="harta">
         <button id="btn-toggle-admin" onclick="deschideModAdaugare()">+ Adaugă Punct Nou</button>
-        <div id="badge-versiune">Versiune: v1.0.19</div>
+        <div id="badge-versiune">Versiune: v1.0.20</div>
     </div>
 
     <!-- Panou Informații -->
@@ -210,11 +210,9 @@
             return null;
         }
 
-        // --- ÎNCĂRCARE COMBINATĂ (GEOJSON + LOCALSTORAGE) ---
         function incarcaToatePunctele() {
             layerGrupPuncte.clearLayers();
 
-            // 1. Încărcăm fișierul de bază puncte.geojson
             fetch('puncte.geojson')
                 .then(res => res.json())
                 .then(data => {
@@ -249,7 +247,6 @@
 
         incarcaToatePunctele();
 
-        // --- ADMIN / ADAUGARE PUNCTE NOI ---
         function deschideModAdaugare() {
             modSelectareCoordonate = true;
             alert("Click pe hartă unde vrei să plasezi noul punct!");
@@ -271,7 +268,7 @@
         function salveazaPunctNou() {
             var cod = document.getElementById('input-cod').value || "H_Nou";
             var lat = parseFloat(document.getElementById('input-lat').value);
-            var lon = parseFloat(document.getElementById('input-lon'].value);
+            var lon = parseFloat(document.getElementById('input-lon').value);
             var desc = document.getElementById('input-desc').value;
             var skfb = document.getElementById('input-skfb').value;
             var media = document.getElementById('input-media').value;
@@ -295,14 +292,13 @@
                 }
             };
 
-            // Salvăm curat în memorie locală separată
             var puncteExistente = JSON.parse(localStorage.getItem('puncte_modificate_pietroasa') || '{"type": "FeatureCollection", "features": []}');
             puncteExistente.features.push(featureNou);
             localStorage.setItem('puncte_modificate_pietroasa', JSON.stringify(puncteExistente));
 
             inchideModal();
             incarcaToatePunctele();
-            alert("Punctul a fost adăugat și salvat local cu succes în browserul tău!");
+            alert("Punctul a fost adăugat și salvat cu succes!");
         }
     </script>
 </body>
