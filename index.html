@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Sesiune Continuă - Pietroasa</title>
+    <title>Hartă Geologică 3D & Editare Puncte - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -26,8 +26,11 @@
         h2 { margin-top: 0; color: #e0a96d; font-size: 22px; }
         .detalii-text { font-size: 14px; line-height: 1.6; margin-top: 15px; color: #ddd; background: #252525; padding: 15px; border-radius: 6px; border: 1px solid #3a3a3a; white-space: pre-line; }
         
-        #btn-toggle-admin { position: absolute; top: 120px; right: 10px; background: #e0a96d; color: #1e1e1e; border: none; padding: 10px 15px; font-weight: bold; border-radius: 6px; cursor: pointer; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        #btn-toggle-admin:hover { background: #f0b97d; }
+        .btn-grup { position: absolute; top: 120px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+        .btn-actiune { background: #e0a96d; color: #1e1e1e; border: none; padding: 10px 15px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); text-align: center; }
+        .btn-actiune:hover { background: #f0b97d; }
+        .btn-editeaza-selectat { background: #2196F3; color: white; display: none; margin-top: 15px; width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-editeaza-selectat:hover { background: #0b7dda; }
         
         #modal-admin { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; border: 2px solid #e0a96d; padding: 25px; z-index: 2000; width: 500px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
         #modal-admin h3 { margin-top: 0; color: #e0a96d; }
@@ -59,8 +62,10 @@
 <body>
 
     <div id="harta">
-        <button id="btn-toggle-admin" onclick="activeazaModDragDrop()">+ Adaugă Punct (Sesiune)</button>
-        <div id="badge-versiune">Versiune: v1.0.38</div>
+        <div class="btn-grup">
+            <button class="btn-actiune" onclick="activeazaModDragDrop()">+ Adaugă Punct Nou</button>
+        </div>
+        <div id="badge-versiune">Versiune: v1.0.39</div>
     </div>
 
     <!-- Panou Informații -->
@@ -76,21 +81,24 @@
         </div>
 
         <div id="continut-detalii"></div>
+        
+        <!-- Buton care apare când selectezi un punct existent pentru a-l edita -->
+        <button id="btn-editeaza" class="btn-editeaza-selectat" onclick="deschideModEditarePunctCurent()">Editează acest punct</button>
     </div>
 
-    <!-- Modal Sesiune Multi-Puncte -->
+    <!-- Modal Admin (Adăugare / Editare) -->
     <div id="modal-admin">
-        <h3>Sesiune Adaugă Puncte GeoJSON</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top:0;">Trage bulina roșie pe hartă, completează datele și apasă "Adaugă în Sesiune".</p>
-        <p id="contor-sesiune" style="font-size: 12px; color: #00ffcc; font-weight: bold; margin: 5px 0;">Puncte noi adăugate în această sesiune: 0</p>
+        <h3 id="modal-titlu">Administrare Punct GeoJSON</h3>
+        <p id="modal-descriere-text" style="font-size: 12px; color: #aaa; margin-top:0;">Completează datele și salvează modificarea.</p>
+        <p id="contor-sesiune" style="font-size: 12px; color: #00ffcc; font-weight: bold; margin: 5px 0;"></p>
         
         <label>Cod Identificare (ex: H101):</label>
         <input type="text" id="input-cod" placeholder="H101">
 
-        <label>Latitudine (preluată de la pin):</label>
+        <label>Latitudine:</label>
         <input type="text" id="input-lat" readonly style="color: #00ffcc; background: #151515;">
 
-        <label>Longitudine (preluată de la pin):</label>
+        <label>Longitudine:</label>
         <input type="text" id="input-lon" readonly style="color: #00ffcc; background: #151515;">
 
         <label>Descriere / Vârstă geologică:</label>
@@ -102,11 +110,11 @@
         <label>Link-uri Poze / Filme Drive:</label>
         <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
 
-        <label>Codul GeoJSON Complet (include punctele vechi + cele noi):</label>
+        <label>Codul GeoJSON Complet (include modificările):</label>
         <textarea id="rezultat-json" readonly placeholder="Apasă 'Generează GeoJSON Final' când ai terminat..."></textarea>
 
         <div class="modal-buttons">
-            <button class="btn-adauga" onclick="adaugaPunctInSesiune()">+ Adaugă în Sesiune</button>
+            <button class="btn-adauga" id="btn-salveaza-modal" onclick="salveazaPunctInSesiune()">+ Salvează în Sesiune</button>
             <button class="btn-genereaza" onclick="genereazaGeoJSONFinal()">Generează GeoJSON Final</button>
             <button class="btn-inchide" onclick="inchideModal()">Închide</button>
         </div>
@@ -131,8 +139,9 @@
         var slideIndex = 0;
         var pinMobil = null;
         var toatePuncteleExistente = []; 
-        var puncteNoiAdaugate = [];     
-        var layerSesiune = L.layerGroup().addTo(map);
+        var puncteModificateSauNoi = {}; // Reține modificările sau punctele noi după codul de identificare
+        var layerPuncteHarta = L.layerGroup().addTo(map);
+        var punctCurentSelectat = null; // Ține minte ce punct am selectat pentru editare
 
         function schimbaSlide(n) {
             var slides = document.getElementsByClassName("carusel-slide");
@@ -174,7 +183,10 @@
             return null;
         }
 
-        function afiseazaDetaliiPunct(props) {
+        function afiseazaDetaliiPunct(feature) {
+            var props = feature.properties;
+            punctCurentSelectat = feature; // Salvăm referința punctului selectat
+            
             document.getElementById('titlu-afloriment').innerText = props.Identification_Code || props.name || "Afloriment";
 
             var embedUrl = obtineEmbedSketchfab(props["3D_Model"]);
@@ -219,6 +231,9 @@
 
             document.getElementById('continut-detalii').className = textFormatat ? "detalii-text" : "";
             document.getElementById('continut-detalii').innerText = textFormatat;
+
+            // Afișăm butonul de editare pentru acest punct
+            document.getElementById('btn-editeaza').style.display = "block";
         }
 
         function convertesteLinkMediaDirect(link) {
@@ -235,29 +250,58 @@
             return null;
         }
 
-        fetch('puncte.geojson')
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.features) {
-                    toatePuncteleExistente = data.features;
-                }
-                L.geoJSON(data, {
-                    pointToLayer: function (feature, latlng) {
-                        return L.marker(latlng);
-                    },
-                    onEachFeature: function(feature, layer) {
-                        var codId = feature.properties.Identification_Code || feature.properties.name || "Punct";
-                        layer.bindTooltip(codId, {permanent: false, direction: 'top'});
-                        
-                        layer.on('click', function(e) {
-                            L.DomEvent.stopPropagation(e);
-                            if (layer.closePopup) layer.closePopup();
-                            afiseazaDetaliiPunct(feature.properties);
-                        });
+        function incarcaHartaPuncte() {
+            layerPuncteHarta.clearLayers();
+            fetch('puncte.geojson')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.features) {
+                        toatePuncteleExistente = data.features;
                     }
-                }).addTo(map);
-            })
-            .catch(err => console.log("Eroare la încărcarea fișierului puncte.geojson:", err));
+                    
+                    // Combinăm cu modificările făcute în sesiune
+                    var toatePuncteleFinal = toatePuncteleExistente.map(function(pt) {
+                        var cod = pt.properties.Identification_Code;
+                        if (cod && puncteModificateSauNoi[cod]) {
+                            return puncteModificateSauNoi[cod]; // Luăm versiunea editată
+                        }
+                        return pt;
+                    });
+
+                    // Adăugăm și punctele complet noi care nu existau înainte
+                    for (var cod in puncteModificateSauNoi) {
+                        var eNou = true;
+                        for (var i = 0; i < toatePuncteleExistente.length; i++) {
+                            if (toatePuncteleExistente[i].properties.Identification_Code === cod) {
+                                eNou = false;
+                                break;
+                            }
+                        }
+                        if (eNou) {
+                            toatePuncteleFinal.push(puncteModificateSauNoi[cod]);
+                        }
+                    }
+
+                    L.geoJSON({ type: "FeatureCollection", features: toatePuncteleFinal }, {
+                        pointToLayer: function (feature, latlng) {
+                            return L.marker(latlng);
+                        },
+                        onEachFeature: function(feature, layer) {
+                            var codId = feature.properties.Identification_Code || feature.properties.name || "Punct";
+                            layer.bindTooltip(codId, {permanent: false, direction: 'top'});
+                            
+                            layer.on('click', function(e) {
+                                L.DomEvent.stopPropagation(e);
+                                if (layer.closePopup) layer.closePopup();
+                                afiseazaDetaliiPunct(feature);
+                            });
+                        }
+                    }).addTo(layerPuncteHarta);
+                })
+                .catch(err => console.log("Eroare la încărcarea punctelor:", err));
+        }
+
+        incarcaHartaPuncte();
 
         function activeazaModDragDrop() {
             var centru = map.getCenter();
@@ -265,6 +309,18 @@
             if (pinMobil) {
                 map.removeLayer(pinMobil);
             }
+
+            document.getElementById('modal-titlu').innerText = "Adaugă Punct Nou";
+            document.getElementById('modal-descriere-text').innerText = "Trage bulina roșie pe hartă exact unde ai nevoie.";
+            document.getElementById('btn-salveaza-modal').innerText = "+ Adaugă în Sesiune";
+
+            document.getElementById('input-cod').value = "";
+            document.getElementById('input-lat').value = centru.lat.toFixed(6);
+            document.getElementById('input-lon').value = centru.lng.toFixed(6);
+            document.getElementById('input-desc').value = "";
+            document.getElementById('input-skfb').value = "";
+            document.getElementById('input-media').value = "";
+            document.getElementById('input-cod').readOnly = false;
 
             pinMobil = L.circleMarker([centru.lat, centru.lng], {
                 radius: 14,
@@ -282,8 +338,6 @@
                 document.getElementById('input-lat').value = latlng.lat.toFixed(6);
                 document.getElementById('input-lon').value = latlng.lng.toFixed(6);
             }
-
-            actualizeazaCoordonatePin();
 
             var isDragging = false;
             pinMobil.on('mousedown', function() { isDragging = true; map.dragging.disable(); });
@@ -305,20 +359,41 @@
             document.getElementById('modal-admin').style.display = "block";
         }
 
-        function adaugaPunctInSesiune() {
-            var cod = document.getElementById('input-cod').value || "H_Nou";
+        function deschideModEditarePunctCurent() {
+            if (!punctCurentSelectat) return;
+
+            var props = punctCurentSelectat.properties;
+            var coords = punctCurentSelectat.geometry.coordinates;
+
+            document.getElementById('modal-titlu').innerText = "Editează Punctul: " + (props.Identification_Code || "");
+            document.getElementById('modal-descriere-text').innerText = "Modifică detaliile de mai jos și apasă Salvează.";
+            document.getElementById('btn-salveaza-modal').innerText = "Salvează Modificarea";
+
+            document.getElementById('input-cod').value = props.Identification_Code || "";
+            document.getElementById('input-cod').readOnly = true; // Codul rămâne fix ca să știm ce punct edităm
+            document.getElementById('input-lat').value = coords[1].toFixed(6);
+            document.getElementById('input-lon').value = coords[0].toFixed(6);
+            document.getElementById('input-desc').value = props.Short_Description || "";
+            document.getElementById('input-skfb').value = props["3D_Model"] || "";
+            document.getElementById('input-media').value = props.gx_media_links || "";
+
+            document.getElementById('modal-admin').style.display = "block";
+        }
+
+        function salveazaPunctInSesiune() {
+            var cod = document.getElementById('input-cod').value.trim();
             var lat = parseFloat(document.getElementById('input-lat').value);
             var lon = parseFloat(document.getElementById('input-lon').value);
             var desc = document.getElementById('input-desc').value;
             var skfb = document.getElementById('input-skfb').value;
             var media = document.getElementById('input-media').value;
 
-            if (isNaN(lat) || isNaN(lon)) {
-                alert("Coordonate invalide!");
+            if (!cod || isNaN(lat) || isNaN(lon)) {
+                alert("Completează codul și coordonatele!");
                 return;
             }
 
-            var featureNou = {
+            var featureModificat = {
                 "type": "Feature",
                 "properties": {
                     "Identification_Code": cod,
@@ -332,33 +407,44 @@
                 }
             };
 
-            puncteNoiAdaugate.push(featureNou);
-            document.getElementById('contor-sesiune').innerText = `Puncte noi adăugate în această sesiune: ${puncteNoiAdaugate.length}`;
+            puncteModificateSauNoi[cod] = featureModificat;
 
-            L.circleMarker([lat, lon], { radius: 8, color: '#00ffcc', fillColor: '#00ffcc', fillOpacity: 0.9 })
-                .bindTooltip(cod, {permanent: true, direction: 'top'})
-                .addTo(layerSesiune);
-
-            document.getElementById('input-cod').value = "";
-            document.getElementById('input-desc').value = "";
-            document.getElementById('input-skfb').value = "";
-            document.getElementById('input-media').value = "";
-
-            alert(`Punctul "${cod}" a fost adăugat în sesiune!`);
+            alert(`Punctul "${cod}" a fost salvat cu succes în sesiune!`);
             document.getElementById('modal-admin').style.display = "none";
+            if (pinMobil) {
+                map.removeLayer(pinMobil);
+                pinMobil = null;
+            }
+
+            incarcaHartaPuncte(); // Reîmprospătăm harta instant
+            afiseazaDetaliiPunct(featureModificat); // Actualizăm și panoul din dreapta
         }
 
         function genereazaGeoJSONFinal() {
-            var toatePuncteleCombinate = toatePuncteleExistente.concat(puncteNoiAdaugate);
+            var toatePuncteleFinal = toatePuncteleExistente.map(function(pt) {
+                var cod = pt.properties.Identification_Code;
+                if (cod && puncteModificateSauNoi[cod]) {
+                    return puncteModificateSauNoi[cod];
+                }
+                return pt;
+            });
 
-            if (toatePuncteleCombinate.length === 0) {
-                alert("Nu există niciun punct de generat!");
-                return;
+            for (var cod in puncteModificateSauNoi) {
+                var eNou = true;
+                for (var i = 0; i < toatePuncteleExistente.length; i++) {
+                    if (toatePuncteleExistente[i].properties.Identification_Code === cod) {
+                        eNou = false;
+                        break;
+                    }
+                }
+                if (eNou) {
+                    toatePuncteleFinal.push(puncteModificateSauNoi[cod]);
+                }
             }
 
             var colectieFinala = {
                 "type": "FeatureCollection",
-                "features": toatePuncteleCombinate
+                "features": toatePuncteleFinal
             };
 
             document.getElementById('rezultat-json').value = JSON.stringify(colectieFinala, null, 2);
