@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Sketchfab Embed Pur - Pietroasa</title>
+    <title>Hartă Geologică 3D & Sketchfab Curat - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -11,12 +11,8 @@
         #harta { width: 65%; height: 100%; position: relative; }
         #panou-info { width: 35%; height: 100%; padding: 25px; overflow-y: auto; box-sizing: border-box; border-left: 2px solid #333; }
         
-        .sketchfab-embed { width: 100%; height: 240px; border: none; border-radius: 8px; margin-bottom: 10px; display: none; }
+        .sketchfab-embed { width: 100%; height: 260px; border: none; border-radius: 8px; margin-bottom: 15px; display: none; }
         
-        /* Buton extern de rezervă pentru Sketchfab */
-        #btn-sketchfab-extern { display: none; width: 100%; background: #9c27b0; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 15px; text-align: center; text-decoration: none; box-sizing: border-box; }
-        #btn-sketchfab-extern:hover { background: #ab47bc; }
-
         /* Carusel Media */
         .carusel-container { position: relative; width: 100%; height: 240px; background: #111; border-radius: 6px; margin-bottom: 15px; display: none; overflow: hidden; border: 1px solid #444; }
         .carusel-slide { width: 100%; height: 100%; display: none; justify-content: center; align-items: center; }
@@ -103,14 +99,12 @@
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
             <button class="btn-actiune btn-refresh" onclick="reprospateazaHartaFortat()">🔄 Reîmprospătează Forțat</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.60</div>
+        <div id="badge-versiune">Versiune: v1.0.61</div>
     </div>
 
     <!-- Panou Informații -->
     <div id="panou-info">
         <h2 id="titlu-afloriment">Selectează un punct</h2>
-        
-        <a id="btn-sketchfab-extern" href="#" target="_blank">📦 Deschide modelul 3D pe Sketchfab ↗</a>
         
         <iframe id="iframe-sketchfab" class="sketchfab-embed" allow="autoplay; fullscreen; vr" allowfullscreen="true"></iframe>
         
@@ -260,29 +254,19 @@
             window.location.href = window.location.pathname + '?v=' + timestamp;
         }
 
-        // Citire directă curată a linkului de embed
-        function parseazaSketchfab(inputVal) {
-            if (!inputVal || typeof inputVal !== 'string') return { embedUrl: "", externalUrl: "" };
-            inputVal = inputVal.trim();
-
-            var embedUrl = "";
-            var externalUrl = "";
-
-            if (inputVal.includes("/embed")) {
-                embedUrl = inputVal.split("?")[0];
-                externalUrl = embedUrl.replace("/embed", "");
-            } else {
-                var segmente = inputVal.split('/');
-                for (var i = 0; i < segmente.length; i++) {
-                    if (segmente[i].length === 32) {
-                        embedUrl = `https://sketchfab.com/models/${segmente[i]}/embed`;
-                        externalUrl = `https://sketchfab.com/models/${segmente[i]}`;
-                        break;
-                    }
+        function obtineEmbedSketchfab(link) {
+            if (!link || typeof link !== 'string') return null;
+            link = link.trim();
+            if (link.includes("/embed")) {
+                return link.split("?")[0];
+            }
+            var segmente = link.split('/');
+            for (var i = 0; i < segmente.length; i++) {
+                if (segmente[i].length === 32) {
+                    return `https://sketchfab.com/models/${segmente[i]}/embed`;
                 }
             }
-
-            return { embedUrl: embedUrl, externalUrl: externalUrl };
+            return null;
         }
 
         function afiseazaDetaliiPunct(feature) {
@@ -291,23 +275,14 @@
             
             document.getElementById('titlu-afloriment').innerText = props.Identification_Code || props.name || "Afloriment";
 
-            var skfbData = parseazaSketchfab(props["3D_Model"]);
+            var embedUrl = obtineEmbedSketchfab(props["3D_Model"]);
             var iframeSkfb = document.getElementById('iframe-sketchfab');
-            var btnExtern = document.getElementById('btn-sketchfab-extern');
-
-            if (skfbData.embedUrl !== "") {
-                iframeSkfb.src = `${skfbData.embedUrl}?autostart=1&ui_infos=0&ui_inspector=1`;
+            if (embedUrl) {
+                iframeSkfb.src = `${embedUrl}?autostart=1&ui_infos=0&ui_inspector=1`;
                 iframeSkfb.style.display = "block";
             } else {
                 iframeSkfb.src = "";
                 iframeSkfb.style.display = "none";
-            }
-
-            if (skfbData.externalUrl !== "") {
-                btnExtern.href = skfbData.externalUrl;
-                btnExtern.style.display = "block";
-            } else {
-                btnExtern.style.display = "none";
             }
 
             var wrapper = document.getElementById('carusel-slides-wrapper');
