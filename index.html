@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Pin Ciocan - Pietroasa</title>
+    <title>Hartă Geologică 3D & Ciocan Geologic - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
@@ -42,51 +42,23 @@
         .btn-editeaza-selectat { background: #2196F3; color: white; display: none; margin-top: 15px; width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-editeaza-selectat:hover { background: #0b7dda; }
         
-        /* REPRODUCERE EXACTĂ A DESIGNULUI DIN IMAGINEA TA */
-        .marker-afloriment-custom {
-            position: relative;
-            width: 42px;
-            height: 52px;
-            cursor: pointer;
-            filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.7));
-            transition: transform 0.2s;
-        }
-        .marker-afloriment-custom:hover {
-            transform: scale(1.15);
-        }
-        .pin-body {
-            position: absolute;
-            top: 0;
-            left: 3px;
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, #4f5762, #242930);
-            border: 2px solid #727c8a;
-            border-radius: 50% 50% 50% 0;
-            transform: rotate(-45deg);
-            box-shadow: inset 0 2px 4px rgba(255,255,255,0.2);
-        }
-        .pin-inner {
-            position: absolute;
-            top: 4px;
-            left: 7px;
-            width: 28px;
-            height: 28px;
-            background: radial-gradient(circle, #e6e6e6 0%, #b5b5b5 100%);
+        /* Iconiță Geologică Robustă și Vizibilă */
+        .marker-afloriment-robust {
+            background: linear-gradient(135deg, #3a4149, #1f242b);
             border: 2px solid #ffffff;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+            text-align: center;
+            font-size: 16px;
+            line-height: 34px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.7);
+            cursor: pointer;
+            transition: transform 0.2s;
         }
-        .pin-inner span {
-            font-size: 14px;
-            transform: rotate(45deg);
-            display: block;
+        .marker-afloriment-robust:hover {
+            transform: scale(1.2);
         }
 
-        /* Stil Personalizat pentru Clustere - Asortat */
+        /* Stil Personalizat pentru Clustere - Asortat în nuanțe calde */
         .custom-cluster-icon {
             background: linear-gradient(135deg, #e0a96d, #c68b59);
             border: 2px solid #ffffff;
@@ -147,7 +119,7 @@
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
             <button class="btn-actiune btn-refresh" onclick="reprospateazaHartaFortat()">🔄 Reîmprospătează Forțat</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.72</div>
+        <div id="badge-versiune">Versiune: v1.0.73</div>
     </div>
 
     <!-- Panou Informații -->
@@ -481,16 +453,12 @@
                 var latlng = [coords[1], coords[0]];
                 var numarIndex = index + 1;
 
+                // Iconiță curată, robustă, cu ciocănel vizibil
                 var customIcon = L.divIcon({
                     className: 'custom-div-icon',
-                    html: `
-                        <div class="marker-afloriment-custom">
-                            <div class="pin-body"></div>
-                            <div class="pin-inner"><span>🔨</span></div>
-                        </div>
-                    `,
-                    iconSize: [42, 52],
-                    iconAnchor: [21, 52]
+                    html: `<div class="marker-afloriment-robust" style="width: 34px; height: 34px;">🔨</div>`,
+                    iconSize: [34, 34],
+                    iconAnchor: [17, 17]
                 });
 
                 var marker = L.marker(latlng, { icon: customIcon });
