@@ -5,7 +5,7 @@
       "type": "Feature",
       "properties": {
         "Identification_Code": "aqwfdasd",
-        "Short_Description": "11111111111",
+        "Short_Description": "afsdfasfd",
         "3D_Model": "https://skfb.ly/oQGwE",
         "gx_media_links": "https://drive.google.com/file/d/1bN-MDS33g0ZDoeXhvoPVG3d2qyz28kHL/view?usp=drive_link\nhttps://drive.google.com/file/d/1bHa89aW5HjUP3ajgxvQn8Q2X4Wa2SBSO/view?usp=drive_link"
       },
@@ -62,22 +62,6 @@
         "coordinates": [
           22.646942,
           46.426972
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "Identification_Code": "asdaqd",
-        "Short_Description": "AQDqadAD",
-        "3D_Model": "",
-        "gx_media_links": ""
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          22.806931,
-          46.80805
         ]
       }
     }
