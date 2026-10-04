@@ -26,7 +26,6 @@
         h2 { margin-top: 0; color: #e0a96d; font-size: 22px; }
         .detalii-text { font-size: 14px; line-height: 1.6; margin-top: 15px; color: #ddd; background: #252525; padding: 15px; border-radius: 6px; border: 1px solid #3a3a3a; white-space: pre-line; }
         
-        /* Buton mutat mai jos, sub controlul de straturi, ca să nu se suprapună */
         #btn-toggle-admin { position: absolute; top: 120px; right: 10px; background: #e0a96d; color: #1e1e1e; border: none; padding: 10px 15px; font-weight: bold; border-radius: 6px; cursor: pointer; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         #btn-toggle-admin:hover { background: #f0b97d; }
         
@@ -59,7 +58,7 @@
 
     <div id="harta">
         <button id="btn-toggle-admin" onclick="deschideModAdaugare()">+ Adaugă Punct Nou</button>
-        <div id="badge-versiune">Versiune: v1.0.21</div>
+        <div id="badge-versiune">Versiune: v1.0.22</div>
     </div>
 
     <!-- Panou Informații -->
@@ -225,9 +224,16 @@
                 });
         }
 
+        // Randare vizuală cu markere Leaflet explicite pentru fiecare punct
         function adaugaLayerPuncte(data) {
             L.geoJSON(data, {
+                pointToLayer: function (feature, latlng) {
+                    return L.marker(latlng); // Creează pinul vizibil pe hartă
+                },
                 onEachFeature: function(feature, layer) {
+                    var codId = feature.properties.Identification_Code || "Punct";
+                    layer.bindTooltip(codId, {permanent: false, direction: 'top'}); // Afișează codul la hover
+                    
                     layer.on('click', function(e) {
                         L.DomEvent.stopPropagation(e);
                         if (layer.closePopup) layer.closePopup();
@@ -298,7 +304,7 @@
 
             inchideModal();
             incarcaToatePunctele();
-            alert("Punctul a fost adăugat și salvat cu succes!");
+            alert("Punctul a fost adăugat, salvat local și va apărea instant pe hartă!");
         }
     </script>
 </body>
