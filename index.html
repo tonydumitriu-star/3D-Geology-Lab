@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Drag&Drop - Pietroasa</title>
+    <title>Hartă Geologică 3D & Sesiune Multi-Puncte - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -29,16 +29,17 @@
         #btn-toggle-admin { position: absolute; top: 120px; right: 10px; background: #e0a96d; color: #1e1e1e; border: none; padding: 10px 15px; font-weight: bold; border-radius: 6px; cursor: pointer; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         #btn-toggle-admin:hover { background: #f0b97d; }
         
-        #modal-admin { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; border: 2px solid #e0a96d; padding: 25px; z-index: 2000; width: 480px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
+        #modal-admin { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; border: 2px solid #e0a96d; padding: 25px; z-index: 2000; width: 500px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
         #modal-admin h3 { margin-top: 0; color: #e0a96d; }
         #modal-admin label { display: block; margin-top: 10px; font-size: 13px; color: #ccc; }
         #modal-admin input, #modal-admin textarea { width: 100%; padding: 8px; margin-top: 5px; background: #1e1e1e; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
-        #modal-admin textarea { height: 70px; resize: vertical; }
-        .modal-buttons { margin-top: 15px; display: flex; justify-content: space-between; }
-        .modal-buttons button { padding: 8px 15px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        #modal-admin textarea { height: 60px; resize: vertical; }
+        .modal-buttons { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; }
+        .modal-buttons button { padding: 8px 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; flex: 1; }
+        .btn-adauga { background: #ff9800; color: white; }
         .btn-genereaza { background: #4CAF50; color: white; }
-        .btn-inchide { background: #f44336; color: white; }
-        #rezultat-json { font-family: monospace; font-size: 11px; background: #111; color: #a6e22e; height: 100px; }
+        .btn-inchide { background: #f44336; color: white; flex: 0.5; }
+        #rezultat-json { font-family: monospace; font-size: 11px; background: #111; color: #a6e22e; height: 120px; }
 
         #badge-versiune {
             position: absolute;
@@ -58,8 +59,8 @@
 <body>
 
     <div id="harta">
-        <button id="btn-toggle-admin" onclick="activeazaModDragDrop()">+ Adaugă Punct (Drag & Drop)</button>
-        <div id="badge-versiune">Versiune: v1.0.35</div>
+        <button id="btn-toggle-admin" onclick="activeazaModDragDrop()">+ Adaugă Punct (Sesiune)</button>
+        <div id="badge-versiune">Versiune: v1.0.36</div>
     </div>
 
     <!-- Panou Informații -->
@@ -77,34 +78,36 @@
         <div id="continut-detalii"></div>
     </div>
 
-    <!-- Modal Generator Cod JSON -->
+    <!-- Modal Sesiune Multi-Puncte -->
     <div id="modal-admin">
-        <h3>Generator Punct GeoJSON (Drag & Drop)</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top:0;">Trage bulina roșie pe hartă exact unde ai nevoie, apoi completează datele.</p>
+        <h3>Sesiune Adaugă Puncte GeoJSON</h3>
+        <p style="font-size: 12px; color: #aaa; margin-top:0;">Trage bulina roșie pe hartă pentru fiecare punct, completează datele și apasă "Adaugă în Sesiune".</p>
+        <p id="contor-sesiune" style="font-size: 12px; color: #00ffcc; font-weight: bold; margin: 5px 0;">Puncte adăugate în sesiunea curentă: 0</p>
         
-        <label>Cod Identificare (ex: H100):</label>
-        <input type="text" id="input-cod" placeholder="H100">
+        <label>Cod Identificare (ex: H101):</label>
+        <input type="text" id="input-cod" placeholder="H101">
 
-        <label>Latitudine (preluată de la pinul mobil):</label>
+        <label>Latitudine (preluată de la pin):</label>
         <input type="text" id="input-lat" readonly style="color: #00ffcc; background: #151515;">
 
-        <label>Longitudine (preluată de la pinul mobil):</label>
+        <label>Longitudine (preluată de la pin):</label>
         <input type="text" id="input-lon" readonly style="color: #00ffcc; background: #151515;">
 
         <label>Descriere / Vârstă geologică:</label>
         <textarea id="input-desc" placeholder="Descriere afloriment..."></textarea>
 
-        <label>Link Sketchfab (Model 3D - skfb.ly, link normal sau HTML iframe):</label>
+        <label>Link Sketchfab (Model 3D):</label>
         <input type="text" id="input-skfb" placeholder="https://skfb.ly/...">
 
         <label>Link-uri Poze / Filme Drive:</label>
         <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
 
-        <label>Codul GeoJSON Generat:</label>
-        <textarea id="rezultat-json" readonly placeholder="Apasă 'Generează Cod GeoJSON'..."></textarea>
+        <label>Codul GeoJSON Complet (pentru fișierul tău):</label>
+        <textarea id="rezultat-json" readonly placeholder="Apasă 'Generează GeoJSON Final' când ai terminat toate punctele..."></textarea>
 
         <div class="modal-buttons">
-            <button class="btn-genereaza" onclick="genereazaCodJson()">Generează Cod GeoJSON</button>
+            <button class="btn-adauga" onclick="adaugaPunctInSesiune()">+ Adaugă în Sesiune</button>
+            <button class="btn-genereaza" onclick="genereazaGeoJSONFinal()">Generează GeoJSON Final</button>
             <button class="btn-inchide" onclick="inchideModal()">Închide</button>
         </div>
     </div>
@@ -127,6 +130,8 @@
 
         var slideIndex = 0;
         var pinMobil = null;
+        var listaPuncteSesiune = []; // Memoria temporară a punctelor adăugate în sesiune
+        var layerSesiune = L.layerGroup().addTo(map); // Afișează vizual punctele adăugate în sesiune pe hartă
 
         function schimbaSlide(n) {
             var slides = document.getElementsByClassName("carusel-slide");
@@ -141,19 +146,15 @@
             slides[slideIndex].classList.add("active");
         }
 
-        // Funcție Sketchfab extrem de flexibilă (suportă link scurt, lung sau cod complet iframe)
         function obtineEmbedSketchfab(link) {
             if (!link || typeof link !== 'string') return null;
             link = link.trim();
-            
-            // Dacă utilizatorul a pus tot codul HTML de la iframe
             if (link.includes("<iframe")) {
                 var matchSrc = link.match(/src="([^"]+)"/);
                 if (matchSrc && matchSrc[1]) {
                     link = matchSrc[1];
                 }
             }
-            
             if (link.includes("/embed")) {
                 return link.split("?")[0];
             }
@@ -233,7 +234,7 @@
             return null;
         }
 
-        // Încărcare din puncte.geojson
+        // Încărcare din puncte.geojson existent
         fetch('puncte.geojson')
             .then(res => res.json())
             .then(data => {
@@ -255,7 +256,7 @@
             })
             .catch(err => console.log("Eroare la încărcarea fișierului puncte.geojson:", err));
 
-        // Activare sistem Drag & Drop
+        // Activare sistem Drag & Drop pentru sesiune
         function activeazaModDragDrop() {
             var centru = map.getCenter();
             
@@ -272,7 +273,7 @@
                 draggable: true
             }).addTo(map);
 
-            pinMobil.bindPopup("<b>Trage-mă cu mouse-ul!</b><br>Pune-mă exact pe afloriment.").openPopup();
+            pinMobil.bindPopup("<b>Trage bulina roșie pe afloriment!</b>").openPopup();
 
             function actualizeazaCoordonatePin() {
                 var latlng = pinMobil.getLatLng();
@@ -299,19 +300,11 @@
                 }
             });
 
-            alert("Am plasat o bulină roșie în centrul hărții! Trage-o cu mouse-ul exact unde ai nevoie pe imaginea geologică, apoi eliberează click-ul.");
+            document.getElementById('modal-admin').style.display = "block";
         }
 
-        function inchideModal() {
-            document.getElementById('modal-admin').style.display = "none";
-            if (pinMobil) {
-                map.removeLayer(pinMobil);
-                pinMobil = null;
-            }
-        }
-
-        function genereazaCodJson() {
-            var cod = document.getElementById('input-cod').value || "H_Nou";
+        function adaugaPunctInSesiune() {
+            var cod = document.getElementById('input-cod'].value || "H_Nou";
             var lat = parseFloat(document.getElementById('input-lat').value);
             var lon = parseFloat(document.getElementById('input-lon').value);
             var desc = document.getElementById('input-desc').value;
@@ -319,11 +312,11 @@
             var media = document.getElementById('input-media').value;
 
             if (isNaN(lat) || isNaN(lon)) {
-                alert("Te rog trage mai întâi bulina roșie pe hartă!");
+                alert("Coordonate invalide!");
                 return;
             }
 
-            var obiectJson = {
+            var featureNou = {
                 "type": "Feature",
                 "properties": {
                     "Identification_Code": cod,
@@ -337,7 +330,48 @@
                 }
             };
 
-            document.getElementById('rezultat-json').value = JSON.stringify(obiectJson, null, 2);
+            // Adăugăm în lista sesiunii
+            listaPuncteSesiune.push(featureNou);
+            document.getElementById('contor-sesiune').innerText = `Puncte adăugate în sesiunea curentă: ${listaPuncteSesiune.length}`;
+
+            // Desenăm un mic marker verde pe hartă pentru a confirma că a fost salvat în sesiune
+            L.circleMarker([lat, lon], { radius: 8, color: '#00ffcc', fillColor: '#00ffcc', fillOpacity: 0.9 })
+                .bindTooltip(cod, {permanent: true, direction: 'top'})
+                .addTo(layerSesiune);
+
+            // Resetăm formularul pentru următorul punct
+            document.getElementById('input-cod').value = "";
+            document.getElementById('input-desc').value = "";
+            document.getElementById('input-skfb').value = "";
+            document.getElementById('input-media').value = "";
+
+            alert(`Punctul "${cod}" a fost adăugat în sesiune! Poți trage din nou bulina roșie pentru următorul punct.`);
+            
+            // Ascundem modalul ca să poți muta pinul din nou
+            document.getElementById('modal-admin').style.display = "none";
+        }
+
+        function genereazaGeoJSONFinal() {
+            if (listaPuncteSesiune.length === 0) {
+                alert("Nu ai adăugat niciun punct în sesiune încă!");
+                return;
+            }
+
+            var colectieFinala = {
+                "type": "FeatureCollection",
+                "features": listaPuncteSesiune
+            };
+
+            document.getElementById('rezultat-json').value = JSON.stringify(colectieFinala, null, 2);
+            document.getElementById('modal-admin').style.display = "block";
+        }
+
+        function inchideModal() {
+            document.getElementById('modal-admin').style.display = "none";
+            if (pinMobil) {
+                map.removeLayer(pinMobil);
+                pinMobil = null;
+            }
         }
     </script>
 </body>
