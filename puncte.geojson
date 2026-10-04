@@ -32,6 +32,38 @@
           46.819798
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Identification_Code": "asdfasF",
+        "Short_Description": "AWSEFAWSF",
+        "3D_Model": "",
+        "gx_media_links": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.274094,
+          46.578215
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Identification_Code": "ZSGV",
+        "Short_Description": "",
+        "3D_Model": "",
+        "gx_media_links": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.646942,
+          46.426972
+        ]
+      }
     }
   ]
 }
