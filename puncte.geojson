@@ -128,6 +128,22 @@
           46.314687
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Identification_Code": "5553q21145",
+        "Short_Description": "awefawf",
+        "3D_Model": "<div class=\"sketchfab-embed-wrapper\"> <iframe title=\"Outcrop (IPD_2023_ Af_3-Beresti)\" frameborder=\"0\" allowfullscreen mozallowfullscreen=\"true\" webkitallowfullscreen=\"true\" allow=\"autoplay; fullscreen; xr-spatial-tracking\" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src=\"https://sketchfab.com/models/7dd2382a2d1d4cec83be3ad8af7db995/embed\"> </iframe> <p style=\"font-size: 13px; font-weight: normal; margin: 5px; color: #4A4A4A;\"> <a href=\"https://sketchfab.com/3d-models/outcrop-ipd-2023--af-3-beresti-7dd2382a2d1d4cec83be3ad8af7db995\" target=\"_blank\" rel=\"nofollow\" style=\"font-weight: bold; color: #1CAAD9;\"> Outcrop (IPD_2023_ Af_3-Beresti) </a> by <a href=\"https://sketchfab.com/3DGeologyLab\" target=\"_blank\" rel=\"nofollow\" style=\"font-weight: bold; color: #1CAAD9;\"> 3D Geology Laboratory </a> on <a href=\"https://sketchfab.com\" target=\"_blank\" rel=\"nofollow\" style=\"font-weight: bold; color: #1CAAD9;\">Sketchfab</a></p></div>",
+        "gx_media_links": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.885208,
+          46.308996
+        ]
+      }
     }
   ]
 }
