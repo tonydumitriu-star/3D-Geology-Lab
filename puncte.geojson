@@ -6,7 +6,7 @@
       "properties": {
         "Identification_Code": "aqwfdasd",
         "Short_Description": "afsdfasfd",
-        "3D_Model": "<div class=\"sketchfab-embed-wrapper\"> <iframe title=\"Outcrop (IPD_2023_ Af_1-Malusteni)\" frameborder=\"0\" allowfullscreen mozallowfullscreen=\"true\" webkitallowfullscreen=\"true\" allow=\"autoplay; fullscreen; xr-spatial-tracking\" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src=\"https://sketchfab.com/models/ba84651817f44b2481c6244f46d59aae/embed\"> </iframe> <p style=\"font-size: 13px; font-weight: normal; margin: 5px; color: #4A4A4A;\"> <a href=\"https://sketchfab.com/3d-models/outcrop-ipd-2023--af-1-malusteni-ba84651817f44b2481c6244f46d59aae\" target=\"_blank\" rel=\"nofollow\" style=\"font-weight: bold; color: #1CAAD9;\"> Outcrop (IPD_2023_ Af_1-Malusteni) </a> by <a href=\"https://sketchfab.com/3DGeologyLab\" target=\"_blank\" rel=\"nofollow\" style=\"font-weight: bold; color: #1CAAD9;\"> 3D Geology Laboratory </a> on <a href=\"https://sketchfab.com\" target=\"_blank\" rel=\"nofollow\" style=\"font-weight: bold; color: #1CAAD9;\">Sketchfab</a></p></div>",
+        "3D_Model": "https://skfb.ly/oQGwE",
         "gx_media_links": "https://drive.google.com/file/d/1bN-MDS33g0ZDoeXhvoPVG3d2qyz28kHL/view?usp=drive_link\nhttps://drive.google.com/file/d/1bHa89aW5HjUP3ajgxvQn8Q2X4Wa2SBSO/view?usp=drive_link"
       },
       "geometry": {
@@ -62,6 +62,22 @@
         "coordinates": [
           22.646942,
           46.426972
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Identification_Code": "qwwqdQD",
+        "Short_Description": "qwdQWD",
+        "3D_Model": "https://skfb.ly/oIGTu",
+        "gx_media_links": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.624283,
+          46.58317
         ]
       }
     }
