@@ -2,10 +2,9 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Clustere Asortate - Pietroasa</title>
+    <title>Hartă Geologică 3D & Clustere Corectate - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
@@ -69,7 +68,7 @@
             transform: rotate(45deg);
         }
 
-        /* Stil Personalizat pentru Clustere - Asortat în nuanțe calde/portocalii geologice */
+        /* Stil Personalizat pentru Clustere - Asortat direct în nuanțe calde */
         .custom-cluster-icon {
             background: linear-gradient(135deg, #e0a96d, #c68b59);
             border: 2px solid #ffffff;
@@ -79,7 +78,7 @@
             color: #ffffff;
             box-shadow: 0 3px 8px rgba(0,0,0,0.6);
             font-size: 13px;
-            line-height: 28px;
+            line-height: 32px;
         }
 
         /* Control straturi jos în stânga */
@@ -130,7 +129,7 @@
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
             <button class="btn-actiune btn-refresh" onclick="reprospateazaHartaFortat()">🔄 Reîmprospătează Forțat</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.67</div>
+        <div id="badge-versiune">Versiune: v1.0.68</div>
     </div>
 
     <!-- Panou Informații -->
@@ -313,10 +312,10 @@
             iconCreateFunction: function(cluster) {
                 var childCount = cluster.getChildCount();
                 return L.divIcon({
-                    html: `<div class="custom-cluster-icon" style="width: 32px; height: 32px;">${childCount}</div>`,
+                    html: `<div class="custom-cluster-icon" style="width: 36px; height: 36px;">${childCount}</div>`,
                     className: 'custom-cluster-wrapper',
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 16]
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 18]
                 });
             }
         });
