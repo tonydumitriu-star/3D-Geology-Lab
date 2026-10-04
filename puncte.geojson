@@ -2,18 +2,18 @@
   "type": "FeatureCollection",
   "features": [
     {
-  "type": "Feature",
-  "properties": {
-    "Identification_Code": "sdsdf",
-    "Short_Description": "afasdf",
-    "3D_Model": "<div class="sketchfab-embed-wrapper"> <iframe title="Outcrop (FB_ Tariverde)" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src="https://sketchfab.com/models/23a2264ef98745759a0f6e65349d18c3/embed"> </iframe> <p style="font-size: 13px; font-weight: normal; margin: 5px; color: #4A4A4A;"> <a href="https://sketchfab.com/3d-models/outcrop-fb--tariverde-23a2264ef98745759a0f6e65349d18c3" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;"> Outcrop (FB_ Tariverde) </a> by <a href="https://sketchfab.com/3DGeologyLab" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;"> 3D Geology Laboratory </a> on <a href="https://sketchfab.com" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;">Sketchfab</a></p></div>",
-    "gx_media_links": "https://drive.google.com/file/d/1Oe3R7aEHaWR58CezTlI-UxccAL6Zq8pn/view?usp=drive_link\nhttps://drive.google.com/file/d/1OiPpoYPNRXKTG5SD6JL977GHDsfnM7-O/view?usp=drive_link"
-  },
-  "geometry": {
-    "type": "Point",
-    "coordinates": [
-      23.295135,
-      46.870519
+      "type": "Feature",
+      "properties": {
+        "Identification_Code": "H_Nou",
+        "Short_Description": "wqewe",
+        "3D_Model": "<div class=\"sketchfab-embed-wrapper\"> <iframe title=\"Outcrop (FB_ Tariverde)\" frameborder=\"0\" allowfullscreen mozallowfullscreen=\"true\" webkitallowfullscreen=\"true\" allow=\"autoplay; fullscreen; xr-spatial-tracking\" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src=\"https://sketchfab.com/models/23a2264ef98745759a0f6e65349d18c3/embed\"> </iframe> <p style=\"font-size: 13px; font-weight: normal; margin: 5px; color: #4A4A4A;\"> <a href=\"https://sketchfab.com/3d-models/outcrop-fb--tariverde-23a2264ef98745759a0f6e65349d18c3\" target=\"_blank\" rel=\"nofollow\" style=\"font-weight: bold; color: #1CAAD9;\"> Outcrop (FB_ Tariverde) </a> by <a href=\"https://sketchfab.com/3DGeologyLab\" target=\"_blank\" rel=\"nofollow\" style=\"font-weight: bold; color: #1CAAD9;\"> 3D Geology Laboratory </a> on <a href=\"https://sketchfab.com\" target=\"_blank\" rel=\"nofollow\" style=\"font-weight: bold; color: #1CAAD9;\">Sketchfab</a></p></div>",
+        "gx_media_links": "https://drive.google.com/file/d/1Oe3R7aEHaWR58CezTlI-UxccAL6Zq8pn/view?usp=drive_link\nhttps://drive.google.com/file/d/1OiH3lWsEYZkAlMNfUbZwGf4Jq1MOVKVN/view?usp=drive_link"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.383241,
+          46.619025
         ]
       }
     }
