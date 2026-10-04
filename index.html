@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Refresh Forțat - Pietroasa</title>
+    <title>Hartă Geologică 3D & Fallback Sketchfab - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -11,8 +11,12 @@
         #harta { width: 65%; height: 100%; position: relative; }
         #panou-info { width: 35%; height: 100%; padding: 25px; overflow-y: auto; box-sizing: border-box; border-left: 2px solid #333; }
         
-        .sketchfab-embed { width: 100%; height: 260px; border: none; border-radius: 8px; margin-bottom: 15px; display: none; }
+        .sketchfab-embed { width: 100%; height: 240px; border: none; border-radius: 8px; margin-bottom: 10px; display: none; }
         
+        /* Buton extern de rezervă pentru Sketchfab */
+        #btn-sketchfab-extern { display: none; width: 100%; background: #9c27b0; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 15px; text-align: center; text-decoration: none; box-sizing: border-box; }
+        #btn-sketchfab-extern:hover { background: #ab47bc; }
+
         /* Carusel Media */
         .carusel-container { position: relative; width: 100%; height: 240px; background: #111; border-radius: 6px; margin-bottom: 15px; display: none; overflow: hidden; border: 1px solid #444; }
         .carusel-slide { width: 100%; height: 100%; display: none; justify-content: center; align-items: center; }
@@ -99,12 +103,15 @@
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
             <button class="btn-actiune btn-refresh" onclick="reprospateazaHartaFortat()">🔄 Reîmprospătează Forțat</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.56</div>
+        <div id="badge-versiune">Versiune: v1.0.58</div>
     </div>
 
     <!-- Panou Informații -->
     <div id="panou-info">
         <h2 id="titlu-afloriment">Selectează un punct</h2>
+        
+        <!-- Buton direct pentru deschiderea modelului 3D în tab nou dacă iframe-ul e blocat de browser -->
+        <a id="btn-sketchfab-extern" href="#" target="_blank">📦 Deschide modelul 3D pe Sketchfab ↗</a>
         
         <iframe id="iframe-sketchfab" class="sketchfab-embed" allow="autoplay; fullscreen; vr" allowfullscreen="true"></iframe>
         
@@ -136,14 +143,14 @@
         <label>Descriere / Vârstă geologică:</label>
         <textarea id="input-desc" placeholder="Descriere afloriment..."></textarea>
 
-        <label>Link Embed Sketchfab (ex: https://sketchfab.com/models/.../embed):</label>
-        <input type="text" id="input-skfb" placeholder="https://sketchfab.com/models/.../embed">
+        <label>Link Sketchfab (ex: https://skfb.ly/oIGTu):</label>
+        <input type="text" id="input-skfb" placeholder="https://skfb.ly/...">
 
         <label>Link-uri Poze / Filme Drive:</label>
         <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
 
         <div class="modal-buttons" style="margin-top: 20px;">
-            <button class="btn-salveaza" onclick="salveazaPunctInSesiune()">Salveaza Punctul</button>
+            <button class="btn-salveaza" onclick="salveazaPunctInSesiune()">Salvează Punctul</button>
             <button class="btn-inchide" onclick="inchideModalPunct()">Anulează</button>
         </div>
     </div>
@@ -180,7 +187,58 @@
 
         var slideIndex = 0;
         var pinMobil = null;
-        var toatePuncteleExistente = []; 
+        var toatePuncteleExistente = [
+            {
+                "type": "Feature",
+                "properties": {
+                    "Identification_Code": "aqwfdasd",
+                    "Short_Description": "afsdfasfd",
+                    "3D_Model": "https://skfb.ly/oQGwE",
+                    "gx_media_links": "https://drive.google.com/file/d/1bN-MDS33g0ZDoeXhvoPVG3d2qyz28kHL/view?usp=drive_link\nhttps://drive.google.com/file/d/1bHa89aW5HjUP3ajgxvQn8Q2X4Wa2SBSO/view?usp=drive_link"
+                },
+                "geometry": { "type": "Point", "coordinates": [22.627716, 46.742213] }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "Identification_Code": "sdfw32svc",
+                    "Short_Description": "sa\\c sdac\\scsc  sadf asf34",
+                    "3D_Model": "https://skfb.ly/oIGTu",
+                    "gx_media_links": "https://drive.google.com/file/d/116NiwNTdFvV_-r1YOFtmEVhqJHebFac_/view?usp=drive_link\nhttps://drive.google.com/file/d/12Fn9AYw8DTH5E4OlzqStVoEh3XkEuxfY/view?usp=drive_link"
+                },
+                "geometry": { "type": "Point", "coordinates": [22.550125, 46.819798] }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "Identification_Code": "asdfasF",
+                    "Short_Description": "AWSEFAWSF",
+                    "3D_Model": "",
+                    "gx_media_links": ""
+                },
+                "geometry": { "type": "Point", "coordinates": [22.274094, 46.578215] }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "Identification_Code": "ZSGV",
+                    "Short_Description": "",
+                    "3D_Model": "",
+                    "gx_media_links": ""
+                },
+                "geometry": { "type": "Point", "coordinates": [22.646942, 46.426972] }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "Identification_Code": "qwwqdQD",
+                    "Short_Description": "qwdQWD",
+                    "3D_Model": "https://skfb.ly/oIGTu",
+                    "gx_media_links": ""
+                },
+                "geometry": { "type": "Point", "coordinates": [22.624283, 46.58317] }
+            }
+        ]; 
         var puncteModificateSauNoi = {}; 
         var layerPuncteHarta = L.layerGroup().addTo(map);
         var punctCurentSelectat = null;
@@ -198,26 +256,9 @@
             slides[slideIndex].classList.add("active");
         }
 
-        // Refresh forțat adevărat cu bypass de cache (echivalent Ctrl + F5)
         function reprospateazaHartaFortat() {
             var timestamp = new Date().getTime();
             window.location.href = window.location.pathname + '?v=' + timestamp;
-        }
-
-        // Extrage corect linkul de embed Sketchfab
-        function obtineEmbedSketchfab(link) {
-            if (!link || typeof link !== 'string') return null;
-            link = link.trim();
-            if (link.includes("/embed")) {
-                return link.split("?")[0];
-            }
-            var segmente = link.split('/');
-            for (var i = 0; i < segmente.length; i++) {
-                if (segmente[i].length === 32) {
-                    return `https://sketchfab.com/models/${segmente[i]}/embed`;
-                }
-            }
-            return null;
         }
 
         function afiseazaDetaliiPunct(feature) {
@@ -226,14 +267,51 @@
             
             document.getElementById('titlu-afloriment').innerText = props.Identification_Code || props.name || "Afloriment";
 
-            var embedUrl = obtineEmbedSketchfab(props["3D_Model"]);
+            var modelLink = props["3D_Model"] ? props["3D_Model"].trim() : "";
             var iframeSkfb = document.getElementById('iframe-sketchfab');
-            if (embedUrl) {
-                iframeSkfb.src = `${embedUrl}?autostart=1&ui_infos=0&ui_inspector=1`;
-                iframeSkfb.style.display = "block";
+            var btnExtern = document.getElementById('btn-sketchfab-extern');
+
+            if (modelLink !== "") {
+                // Generăm linkul de embed pentru iframe
+                var embedUrl = "";
+                var linkExternUrl = modelLink;
+
+                if (modelLink.includes("skfb.ly/")) {
+                    var parti = modelLink.split("skfb.ly/");
+                    if (parti[1]) {
+                        var cod = parti[1].trim().split(/[\s/?#]+/)[0];
+                        if (cod) {
+                            embedUrl = `https://sketchfab.com/models/${cod}/embed`;
+                            linkExternUrl = `https://sketchfab.com/3d-models/${cod}`;
+                        }
+                    }
+                } else if (modelLink.includes("/embed")) {
+                    embedUrl = modelLink.split("?")[0];
+                } else {
+                    var segmente = modelLink.split('/');
+                    for (var i = 0; i < segmente.length; i++) {
+                        if (segmente[i].length === 32) {
+                            embedUrl = `https://sketchfab.com/models/${segmente[i]}/embed`;
+                            break;
+                        }
+                    }
+                }
+
+                if (embedUrl) {
+                    iframeSkfb.src = `${embedUrl}?autostart=1&ui_infos=0&ui_inspector=1`;
+                    iframeSkfb.style.display = "block";
+                } else {
+                    iframeSkfb.src = "";
+                    iframeSkfb.style.display = "none";
+                }
+
+                // Setăm și butonul extern de rezervă
+                btnExtern.href = linkExternUrl.includes("skfb.ly/") ? linkExternUrl : modelLink;
+                btnExtern.style.display = "block";
             } else {
                 iframeSkfb.src = "";
                 iframeSkfb.style.display = "none";
+                btnExtern.style.display = "none";
             }
 
             var wrapper = document.getElementById('carusel-slides-wrapper');
@@ -288,61 +366,52 @@
 
         function incarcaHartaPuncte() {
             layerPuncteHarta.clearLayers();
-            fetch('puncte.geojson')
-                .then(res => res.json())
-                .then(data => {
-                    if (data && data.features) {
-                        toatePuncteleExistente = data.features;
+            
+            var toatePuncteleFinal = toatePuncteleExistente.map(function(pt) {
+                var cod = pt.properties.Identification_Code;
+                if (cod && puncteModificateSauNoi[cod]) {
+                    return puncteModificateSauNoi[cod];
+                }
+                return pt;
+            });
+
+            for (var cod in puncteModificateSauNoi) {
+                var eNou = true;
+                for (var i = 0; i < toatePuncteleExistente.length; i++) {
+                    if (toatePuncteleExistente[i].properties.Identification_Code === cod) {
+                        eNou = false;
+                        break;
                     }
-                    
-                    var toatePuncteleFinal = toatePuncteleExistente.map(function(pt) {
-                        var cod = pt.properties.Identification_Code;
-                        if (cod && puncteModificateSauNoi[cod]) {
-                            return puncteModificateSauNoi[cod];
-                        }
-                        return pt;
-                    });
+                }
+                if (eNou) {
+                    toatePuncteleFinal.push(puncteModificateSauNoi[cod]);
+                }
+            }
 
-                    for (var cod in puncteModificateSauNoi) {
-                        var eNou = true;
-                        for (var i = 0; i < toatePuncteleExistente.length; i++) {
-                            if (toatePuncteleExistente[i].properties.Identification_Code === cod) {
-                                eNou = false;
-                                break;
-                            }
-                        }
-                        if (eNou) {
-                            toatePuncteleFinal.push(puncteModificateSauNoi[cod]);
-                        }
-                    }
+            toatePuncteleFinal.forEach(function(feature, index) {
+                var coords = feature.geometry.coordinates;
+                var latlng = [coords[1], coords[0]];
+                var numarIndex = index + 1;
 
-                    toatePuncteleFinal.forEach(function(feature, index) {
-                        var coords = feature.geometry.coordinates;
-                        var latlng = [coords[1], coords[0]];
-                        var numarIndex = index + 1;
+                var customIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div class="marker-afloriment" style="width: 26px; height: 26px;">${numarIndex}</div>`,
+                    iconSize: [26, 26],
+                    iconAnchor: [13, 13]
+                });
 
-                        var customIcon = L.divIcon({
-                            className: 'custom-div-icon',
-                            html: `<div class="marker-afloriment" style="width: 26px; height: 26px;">${numarIndex}</div>`,
-                            iconSize: [26, 26],
-                            iconAnchor: [13, 13]
-                        });
+                var marker = L.marker(latlng, { icon: customIcon });
 
-                        var marker = L.marker(latlng, { icon: customIcon });
+                var codId = feature.properties.Identification_Code || `Punct ${numarIndex}`;
+                marker.bindTooltip(`<b>#${numarIndex}: ${codId}</b>`, {permanent: false, direction: 'top'});
 
-                        var codId = feature.properties.Identification_Code || `Punct ${numarIndex}`;
-                        marker.bindTooltip(`<b>#${numarIndex}: ${codId}</b>`, {permanent: false, direction: 'top'});
+                marker.on('click', function(e) {
+                    L.DomEvent.stopPropagation(e);
+                    afiseazaDetaliiPunct(feature);
+                });
 
-                        marker.on('click', function(e) {
-                            L.DomEvent.stopPropagation(e);
-                            afiseazaDetaliiPunct(feature);
-                        });
-
-                        layerPuncteHarta.addLayer(marker);
-                    });
-
-                })
-                .catch(err => console.log("Eroare la încărcarea punctelor:", err));
+                layerPuncteHarta.addLayer(marker);
+            });
         }
 
         incarcaHartaPuncte();
