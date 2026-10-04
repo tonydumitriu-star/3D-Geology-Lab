@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Sketchfab Original - Pietroasa</title>
+    <title>Hartă Geologică 3D & Sketchfab Fix Definitiv - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -96,7 +96,7 @@
             <button class="btn-actiune" onclick="activeazaModDragDrop()">+ Adaugă Punct Nou</button>
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.51</div>
+        <div id="badge-versiune">Versiune: v1.0.52</div>
     </div>
 
     <!-- Panou Informații -->
@@ -195,24 +195,27 @@
             slides[slideIndex].classList.add("active");
         }
 
-        // FUNCȚIA ORIGINALĂ EXACTĂ CARE FUNCȚIONA ÎNAINTE
+        // FUNCȚIE NOUĂ SIMPLIFICATĂ 100% ROBUSTĂ PENTRU SKETCHFAB
         function obtineEmbedSketchfab(link) {
             if (!link || typeof link !== 'string') return null;
             link = link.trim();
-            if (link.includes("<iframe")) {
-                var matchSrc = link.match(/src="([^"]+)"/);
-                if (matchSrc && matchSrc[1]) {
-                    link = matchSrc[1];
+            
+            // Dacă conține skfb.ly, extragem codul și generăm direct URL-ul de embed oficial
+            if (link.includes("skfb.ly/")) {
+                var parti = link.split("skfb.ly/");
+                if (parti[1]) {
+                    var cod = parti[1].trim().split(/[\s/?#]+/)[0];
+                    if (cod) {
+                        return `https://sketchfab.com/models/${cod}/embed`;
+                    }
                 }
             }
-            if (link.includes("/embed")) {
-                return link.split("?")[0];
-            }
-            if (link.includes("skfb.ly/")) {
-                var cod = link.split("skfb.ly/")[1].trim().split(/[\s/?#]+/)[0];
-                return `https://sketchfab.com/models/${cod}/embed`;
-            }
+            
+            // Dacă este deja un link complet sau contine embed
             if (link.includes("sketchfab.com/")) {
+                if (link.includes("/embed")) {
+                    return link.split("?")[0];
+                }
                 var segmente = link.split('/');
                 for (var i = 0; i < segmente.length; i++) {
                     if (segmente[i].length === 32) {
@@ -220,6 +223,7 @@
                     }
                 }
             }
+            
             return null;
         }
 
