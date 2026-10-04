@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Editor - Pietroasa</title>
+    <title>Hartă Geologică 3D - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -26,19 +26,6 @@
         h2 { margin-top: 0; color: #e0a96d; font-size: 22px; }
         .detalii-text { font-size: 14px; line-height: 1.6; margin-top: 15px; color: #ddd; background: #252525; padding: 15px; border-radius: 6px; border: 1px solid #3a3a3a; white-space: pre-line; }
         
-        #btn-toggle-admin { position: absolute; top: 120px; right: 10px; background: #e0a96d; color: #1e1e1e; border: none; padding: 10px 15px; font-weight: bold; border-radius: 6px; cursor: pointer; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        #btn-toggle-admin:hover { background: #f0b97d; }
-        
-        #modal-admin { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; border: 2px solid #e0a96d; padding: 25px; z-index: 2000; width: 450px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
-        #modal-admin h3 { margin-top: 0; color: #e0a96d; }
-        #modal-admin label { display: block; margin-top: 10px; font-size: 13px; color: #ccc; }
-        #modal-admin input, #modal-admin textarea { width: 100%; padding: 8px; margin-top: 5px; background: #1e1e1e; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
-        #modal-admin textarea { height: 80px; resize: vertical; }
-        .modal-buttons { margin-top: 15px; display: flex; justify-content: space-between; }
-        .modal-buttons button { padding: 8px 15px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        .btn-salveaza { background: #4CAF50; color: white; }
-        .btn-inchide { background: #f44336; color: white; }
-
         #badge-versiune {
             position: absolute;
             bottom: 10px;
@@ -57,8 +44,7 @@
 <body>
 
     <div id="harta">
-        <button id="btn-toggle-admin" onclick="deschideModAdaugare()">+ Adaugă Punct Nou</button>
-        <div id="badge-versiune">Versiune: v1.0.23</div>
+        <div id="badge-versiune">Versiune: v1.0.24</div>
     </div>
 
     <!-- Panou Informații -->
@@ -76,35 +62,6 @@
         <div id="continut-detalii"></div>
     </div>
 
-    <!-- Modal Formular Adaugare Punct -->
-    <div id="modal-admin">
-        <h3>Adaugă Afloriment Nou</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top:0;">Click pe hartă pentru coordonate sau completează manual.</p>
-        
-        <label>Cod Identificare (ex: H100):</label>
-        <input type="text" id="input-cod" placeholder="H100">
-
-        <label>Latitudine:</label>
-        <input type="text" id="input-lat" placeholder="46.5833">
-
-        <label>Longitudine:</label>
-        <input type="text" id="input-lon" placeholder="22.6246">
-
-        <label>Descriere completă / Vârstă / Note:</label>
-        <textarea id="input-desc" placeholder="Detalii geologice..."></textarea>
-
-        <label>Link Sketchfab (Model 3D):</label>
-        <input type="text" id="input-skfb" placeholder="https://skfb.ly/...">
-
-        <label>Link-uri Poze / Filme Drive:</label>
-        <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
-
-        <div class="modal-buttons">
-            <button class="btn-salveaza" onclick="salveazaPunctNou()">Salvează Local</button>
-            <button class="btn-inchide" onclick="inchideModal()">Anulează</button>
-        </div>
-    </div>
-
     <script>
         var map = L.map('harta', { zoomControl: true, dragging: true }).setView([46.5833, 22.6246], 11); 
 
@@ -117,8 +74,6 @@
         L.control.layers(null, { "056-A-Pietroasa": hartaGeologica }, {collapsed: false}).addTo(map);
 
         var slideIndex = 0;
-        var layerGrupPuncte = L.layerGroup().addTo(map);
-        var modSelectareCoordonate = false;
 
         function schimbaSlide(n) {
             var slides = document.getElementsByClassName("carusel-slide");
@@ -151,7 +106,7 @@
         }
 
         function afiseazaDetaliiPunct(props) {
-            document.getElementById('titlu-afloriment').innerText = props.Identification_Code || "Afloriment";
+            document.getElementById('titlu-afloriment').innerText = props.Identification_Code || props.name || "Afloriment";
 
             var embedUrl = obtineEmbedSketchfab(props["3D_Model"]);
             var iframeSkfb = document.getElementById('iframe-sketchfab');
@@ -187,9 +142,11 @@
             }
 
             var textFormatat = "";
+            if (props.KML_FOLDER) textFormatat += `Regiune/Folder: ${props.KML_FOLDER}\n`;
             if (props.Short_Description) textFormatat += `Descriere: ${props.Short_Description}\n`;
-            if (props.Geological_Time) textFormatat += `Vârstă: ${props.Geological_Time}\n`;
+            if (props.Geological_Time || props.Geological_age) textFormatat += `Vârstă: ${props.Geological_Time || props.Geological_age}\n`;
             if (props.Other) textFormatat += `Note: ${props.Other}\n`;
+            if (props.References) textFormatat += `Referințe: ${props.References}`;
 
             document.getElementById('continut-detalii').className = textFormatat ? "detalii-text" : "";
             document.getElementById('continut-detalii').innerText = textFormatat;
@@ -209,106 +166,27 @@
             return null;
         }
 
-        // --- ÎNCĂRCARE UNITARĂ ȘI SIGURĂ A PUNCTELOR ---
-        function incarcaToatePunctele() {
-            layerGrupPuncte.clearLayers();
-
-            fetch('puncte.geojson')
-                .then(res => res.json())
-                .then(data => {
-                    // Prereluăm și punctele salvate local în browser
-                    var puncteLocale = localStorage.getItem('puncte_modificate_pietroasa');
-                    if (puncteLocale) {
-                        var dataLocale = JSON.parse(puncteLocale);
-                        if (dataLocale && dataLocale.features) {
-                            data.features = data.features.concat(dataLocale.features);
-                        }
+        // Încărcare sigură și directă din puncte.geojson
+        fetch('puncte.geojson')
+            .then(res => res.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    pointToLayer: function (feature, latlng) {
+                        return L.marker(latlng);
+                    },
+                    onEachFeature: function(feature, layer) {
+                        var codId = feature.properties.Identification_Code || feature.properties.name || "Punct";
+                        layer.bindTooltip(codId, {permanent: false, direction: 'top'});
+                        
+                        layer.on('click', function(e) {
+                            L.DomEvent.stopPropagation(e);
+                            if (layer.closePopup) layer.closePopup();
+                            afiseazaDetaliiPunct(feature.properties);
+                        });
                     }
-                    randreazaPunctePeHartă(data);
-                })
-                .catch(err => {
-                    console.log("Nu s-a putut citi puncte.geojson, se afișează doar cele locale.");
-                    var puncteLocale = localStorage.getItem('puncte_modificate_pietroasa');
-                    if (puncteLocale) {
-                        var dataLocale = JSON.parse(puncteLocale);
-                        randreazaPunctePeHartă(dataLocale);
-                    }
-                });
-        }
-
-        function randreazaPunctePeHartă(data) {
-            L.geoJSON(data, {
-                pointToLayer: function (feature, latlng) {
-                    return L.marker(latlng);
-                },
-                onEachFeature: function(feature, layer) {
-                    var codId = feature.properties.Identification_Code || "Punct";
-                    layer.bindTooltip(codId, {permanent: false, direction: 'top'});
-                    
-                    layer.on('click', function(e) {
-                        L.DomEvent.stopPropagation(e);
-                        if (layer.closePopup) layer.closePopup();
-                        afiseazaDetaliiPunct(feature.properties);
-                    });
-                }
-            }).addTo(layerGrupPuncte);
-        }
-
-        incarcaToatePunctele();
-
-        function deschideModAdaugare() {
-            modSelectareCoordonate = true;
-            alert("Click pe hartă unde vrei să plasezi noul punct!");
-        }
-
-        map.on('click', function(e) {
-            if (modSelectareCoordonate) {
-                document.getElementById('input-lat').value = e.latlng.lat.toFixed(6);
-                document.getElementById('input-lon').value = e.latlng.lng.toFixed(6);
-                modSelectareCoordonate = false;
-                document.getElementById('modal-admin').style.display = "block";
-            }
-        });
-
-        function inchideModal() {
-            document.getElementById('modal-admin').style.display = "none";
-        }
-
-        function salveazaPunctNou() {
-            var cod = document.getElementById('input-cod').value || "H_Nou";
-            var lat = parseFloat(document.getElementById('input-lat').value);
-            var lon = parseFloat(document.getElementById('input-lon').value);
-            var desc = document.getElementById('input-desc').value;
-            var skfb = document.getElementById('input-skfb').value;
-            var media = document.getElementById('input-media').value;
-
-            if (isNaN(lat) || isNaN(lon)) {
-                alert("Coordonate invalide!");
-                return;
-            }
-
-            var featureNou = {
-                "type": "Feature",
-                "properties": {
-                    "Identification_Code": cod,
-                    "Short_Description": desc,
-                    "3D_Model": skfb,
-                    "gx_media_links": media
-                },
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [lon, lat]
-                }
-            };
-
-            var puncteExistente = JSON.parse(localStorage.getItem('puncte_modificate_pietroasa') || '{"type": "FeatureCollection", "features": []}');
-            puncteExistente.features.push(featureNou);
-            localStorage.setItem('puncte_modificate_pietroasa', JSON.stringify(puncteExistente));
-
-            inchideModal();
-            incarcaToatePunctele();
-            alert("Punctul a fost adăugat și a apărut imediat pe hartă!");
-        }
+                }).addTo(map);
+            })
+            .catch(err => console.log("Eroare la încărcarea fișierului puncte.geojson:", err));
     </script>
 </body>
 </html>
