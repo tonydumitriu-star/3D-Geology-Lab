@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Sketchfab Fix Definitiv - Pietroasa</title>
+    <title>Hartă Geologică 3D & Sketchfab Embed Direct - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -96,7 +96,7 @@
             <button class="btn-actiune" onclick="activeazaModDragDrop()">+ Adaugă Punct Nou</button>
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.52</div>
+        <div id="badge-versiune">Versiune: v1.0.53</div>
     </div>
 
     <!-- Panou Informații -->
@@ -133,8 +133,8 @@
         <label>Descriere / Vârstă geologică:</label>
         <textarea id="input-desc" placeholder="Descriere afloriment..."></textarea>
 
-        <label>Link Sketchfab (ex: https://skfb.ly/oIGTu):</label>
-        <input type="text" id="input-skfb" placeholder="https://skfb.ly/...">
+        <label>Link Embed Sketchfab (ex: https://sketchfab.com/models/.../embed):</label>
+        <input type="text" id="input-skfb" placeholder="https://sketchfab.com/models/.../embed">
 
         <label>Link-uri Poze / Filme Drive:</label>
         <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
@@ -195,32 +195,29 @@
             slides[slideIndex].classList.add("active");
         }
 
-        // FUNCȚIE NOUĂ SIMPLIFICATĂ 100% ROBUSTĂ PENTRU SKETCHFAB
+        // Folosim direct linkul oficial de embed sau extragem ID-ul curat
         function obtineEmbedSketchfab(link) {
             if (!link || typeof link !== 'string') return null;
             link = link.trim();
             
-            // Dacă conține skfb.ly, extragem codul și generăm direct URL-ul de embed oficial
-            if (link.includes("skfb.ly/")) {
-                var parti = link.split("skfb.ly/");
-                if (parti[1]) {
-                    var cod = parti[1].trim().split(/[\s/?#]+/)[0];
-                    if (cod) {
-                        return `https://sketchfab.com/models/${cod}/embed`;
-                    }
-                }
+            // Dacă conține /embed, îl luăm direct
+            if (link.includes("/embed")) {
+                return link.split("?")[0];
             }
             
-            // Dacă este deja un link complet sau contine embed
-            if (link.includes("sketchfab.com/")) {
-                if (link.includes("/embed")) {
-                    return link.split("?")[0];
+            // Dacă utilizatorul a pus totuși un link skfb.ly, îl convertim în siguranță la embed oficial
+            if (link.includes("skfb.ly/")) {
+                var cod = link.split("skfb.ly/")[1].trim().split(/[\s/?#]+/)[0];
+                if (cod) {
+                    return `https://sketchfab.com/models/${cod}/embed`;
                 }
-                var segmente = link.split('/');
-                for (var i = 0; i < segmente.length; i++) {
-                    if (segmente[i].length === 32) {
-                        return `https://sketchfab.com/models/${segmente[i]}/embed`;
-                    }
+            }
+
+            // Dacă e link complet cu ID de 32 de caractere
+            var segmente = link.split('/');
+            for (var i = 0; i < segmente.length; i++) {
+                if (segmente[i].length === 32) {
+                    return `https://sketchfab.com/models/${segmente[i]}/embed`;
                 }
             }
             
