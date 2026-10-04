@@ -2,12 +2,13 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Pin Geologic Personalizat - Pietroasa</title>
+    <title>Hartă Geologică 3D & Pin Ciocan - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.default.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     
     <style>
         body { display: flex; margin: 0; height: 100vh; font-family: Arial, sans-serif; background: #1e1e1e; color: #fff; }
@@ -53,7 +54,6 @@
         .marker-afloriment-custom:hover {
             transform: scale(1.15);
         }
-        /* Corpul exterior al pinului (formă de picătură închisă la culoare) */
         .pin-body {
             position: absolute;
             top: 0;
@@ -66,7 +66,6 @@
             transform: rotate(-45deg);
             box-shadow: inset 0 2px 4px rgba(255,255,255,0.2);
         }
-        /* Cercul interior alb cu textură de rocă și ciocănelul auriu */
         .pin-inner {
             position: absolute;
             top: 4px;
@@ -81,14 +80,13 @@
             justify-content: center;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
         }
-        /* Ciocănelul stilizat în diagonală exact ca în imagine */
         .pin-inner span {
             font-size: 14px;
             transform: rotate(45deg);
-            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.6));
+            display: block;
         }
 
-        /* Stil Personalizat pentru Clustere */
+        /* Stil Personalizat pentru Clustere - Asortat */
         .custom-cluster-icon {
             background: linear-gradient(135deg, #e0a96d, #c68b59);
             border: 2px solid #ffffff;
@@ -149,7 +147,7 @@
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
             <button class="btn-actiune btn-refresh" onclick="reprospateazaHartaFortat()">🔄 Reîmprospătează Forțat</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.71</div>
+        <div id="badge-versiune">Versiune: v1.0.72</div>
     </div>
 
     <!-- Panou Informații -->
@@ -483,7 +481,6 @@
                 var latlng = [coords[1], coords[0]];
                 var numarIndex = index + 1;
 
-                // Folosim structura exactă bazată pe designul tău din imagine
                 var customIcon = L.divIcon({
                     className: 'custom-div-icon',
                     html: `
