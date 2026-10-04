@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Clustere Separate - Pietroasa</title>
+    <title>Hartă Geologică 3D & Iconițe Ciocănel - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
@@ -42,20 +42,23 @@
         .btn-editeaza-selectat { background: #2196F3; color: white; display: none; margin-top: 15px; width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-editeaza-selectat:hover { background: #0b7dda; }
         
-        /* Simbol Special Afloriment (Index pe hartă) */
+        /* Iconiță Simpatică Afloriment (Ciocănel de Geolog) */
         .marker-afloriment {
             background: #e0a96d;
             border: 2px solid #ffffff;
             border-radius: 50%;
             text-align: center;
-            font-weight: bold;
-            color: #1e1e1e;
+            font-size: 14px;
+            line-height: 26px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-            font-size: 11px;
-            line-height: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .marker-afloriment:hover {
+            transform: scale(1.15);
         }
 
-        /* Stil Personalizat pentru Clustere (diferit de markerii individuali) */
+        /* Stil Personalizat pentru Clustere */
         .custom-cluster-icon {
             background: rgba(33, 150, 243, 0.9);
             border: 2px solid #ffffff;
@@ -116,7 +119,7 @@
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
             <button class="btn-actiune btn-refresh" onclick="reprospateazaHartaFortat()">🔄 Reîmprospătează Forțat</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.63</div>
+        <div id="badge-versiune">Versiune: v1.0.64</div>
     </div>
 
     <!-- Panou Informații -->
@@ -292,7 +295,6 @@
         ]; 
         var puncteModificateSauNoi = {}; 
 
-        // Configurare cluster cu stil vizual diferit (albastru cu cerc alb), separat de numerele portocalii ale aflorimentelor
         var clusterPuncteHarta = L.markerClusterGroup({
             spiderfyOnMaxZoom: true,
             showCoverageOnHover: false,
@@ -451,18 +453,18 @@
                 var latlng = [coords[1], coords[0]];
                 var numarIndex = index + 1;
 
-                // Markerul individual folosește culoarea portocalie specifică aflorimentelor cu numărul lor de ordine
+                // Înlocuim numărul cu iconița simpatică de ciocănel de geolog (🔨)
                 var customIcon = L.divIcon({
                     className: 'custom-div-icon',
-                    html: `<div class="marker-afloriment" style="width: 26px; height: 26px;">${numarIndex}</div>`,
-                    iconSize: [26, 26],
-                    iconAnchor: [13, 13]
+                    html: `<div class="marker-afloriment" style="width: 28px; height: 28px;">🔨</div>`,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14]
                 });
 
                 var marker = L.marker(latlng, { icon: customIcon });
 
                 var codId = feature.properties.Identification_Code || `Punct ${numarIndex}`;
-                marker.bindTooltip(`<b>#${numarIndex}: ${codId}</b>`, {permanent: false, direction: 'top'});
+                marker.bindTooltip(`<b>Afloriment: ${codId}</b>`, {permanent: false, direction: 'top'});
 
                 marker.on('click', function(e) {
                     L.DomEvent.stopPropagation(e);
@@ -521,7 +523,7 @@
             map.on('mouseup', function() {
                 if (isDragging) {
                     isDragging = false;
-                    map.dragging.enable();
+                    map.dragging.disable();
                     actualizeazaCoordonatePin();
                     document.getElementById('modal-punct').style.display = "block";
                 }
