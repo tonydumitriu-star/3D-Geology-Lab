@@ -2,13 +2,13 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Debug - Pietroasa</title>
+    <title>Hartă Geologică 3D - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
         body { display: flex; margin: 0; height: 100vh; font-family: Arial, sans-serif; background: #1e1e1e; color: #fff; }
-        #harta { width: 65%; height: 100%; position: relative; cursor: crosshair; }
+        #harta { width: 65%; height: 100%; position: relative; }
         #panou-info { width: 35%; height: 100%; padding: 25px; overflow-y: auto; box-sizing: border-box; border-left: 2px solid #333; }
         
         .sketchfab-embed { width: 100%; height: 260px; border: none; border-radius: 8px; margin-bottom: 15px; display: none; }
@@ -29,9 +29,6 @@
         #btn-toggle-admin { position: absolute; top: 120px; right: 10px; background: #e0a96d; color: #1e1e1e; border: none; padding: 10px 15px; font-weight: bold; border-radius: 6px; cursor: pointer; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         #btn-toggle-admin:hover { background: #f0b97d; }
         
-        /* Panou de Debug Live (Stânga Sus pe Hartă) */
-        #debug-box { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.85); color: #00ffcc; padding: 10px 15px; font-size: 13px; z-index: 1000; border-radius: 6px; border: 1px solid #00ffcc; font-family: monospace; pointer-events: none; }
-
         #modal-admin { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; border: 2px solid #e0a96d; padding: 25px; z-index: 2000; width: 480px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
         #modal-admin h3 { margin-top: 0; color: #e0a96d; }
         #modal-admin label { display: block; margin-top: 10px; font-size: 13px; color: #ccc; }
@@ -62,8 +59,7 @@
 
     <div id="harta">
         <button id="btn-toggle-admin" onclick="deschideModAdaugare()">+ Adaugă Punct Nou</button>
-        <div id="badge-versiune">Versiune: v1.0.30</div>
-        <div id="debug-box">Mutați mouse-ul pe hartă...</div>
+        <div id="badge-versiune">Versiune: v1.0.32</div>
     </div>
 
     <!-- Panou Informații -->
@@ -83,16 +79,16 @@
 
     <!-- Modal Generator Cod JSON -->
     <div id="modal-admin">
-        <h3>Generator Punct GeoJSON (Mod Debug)</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top:0;">Verifică dacă cercul roșu urmărește exact cursorul tău.</p>
+        <h3>Generator Punct GeoJSON (Manual & Precis)</h3>
+        <p style="font-size: 12px; color: #aaa; margin-top:0;">Introdu direct coordonatele reale luate din Google Maps pentru o precizie absolută.</p>
         
         <label>Cod Identificare (ex: H100):</label>
         <input type="text" id="input-cod" placeholder="H100">
 
-        <label>Latitudine:</label>
+        <label>Latitudine (ex: 46.5833):</label>
         <input type="text" id="input-lat" placeholder="46.5833">
 
-        <label>Longitudine:</label>
+        <label>Longitudine (ex: 22.6246):</label>
         <input type="text" id="input-lon" placeholder="22.6246">
 
         <label>Descriere / Vârstă geologică:</label>
@@ -105,7 +101,7 @@
         <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
 
         <label>Codul GeoJSON Generat:</label>
-        <textarea id="rezultat-json" readonly placeholder="Apasă 'Generează Cod' după click..."></textarea>
+        <textarea id="rezultat-json" readonly placeholder="Apasă 'Generează Cod'..."></textarea>
 
         <div class="modal-buttons">
             <button class="btn-genereaza" onclick="genereazaCodJson()">Generează Cod</button>
@@ -130,9 +126,6 @@
         }, 200);
 
         var slideIndex = 0;
-        var modSelectareCoordonate = false;
-        var markerCursor = null; // Cercul roșu care urmărește mouse-ul în timp real
-        var markerFix = null;    // Markerul pus la click final
 
         function schimbaSlide(n) {
             var slides = document.getElementsByClassName("carusel-slide");
@@ -251,56 +244,9 @@
             })
             .catch(err => console.log("Eroare la încărcarea fișierului puncte.geojson:", err));
 
-        // Debug Live: Urmărim mișcarea mouse-ului pe hartă
-        map.on('mousemove', function(e) {
-            var lat = e.latlng.lat;
-            var lon = e.latlng.lng;
-            document.getElementById('debug-box').innerHTML = `<b>LIVE DEBUG:</b><br>Lat: ${lat.toFixed(6)}<br>Lon: ${lon.toFixed(6)}`;
-
-            if (modSelectareCoordonate) {
-                if (!markerCursor) {
-                    markerCursor = L.circleMarker([lat, lon], { radius: 8, color: '#ff0000', fillColor: '#ff0000', fillOpacity: 0.9 }).addTo(map);
-                } else {
-                    markerCursor.setLatLng([lat, lon]);
-                }
-            }
-        });
-
         function deschideModAdaugare() {
-            modSelectareCoordonate = true;
-            alert("Mod adăugare activat! Urmărește cercul roșu și dă click pe locul dorit.");
+            document.getElementById('modal-admin').style.display = "block";
         }
-
-        map.on('click', function(e) {
-            if (modSelectareCoordonate) {
-                var lat = e.latlng.lat;
-                var lon = e.latlng.lng;
-
-                document.getElementById('input-lat').value = lat.toFixed(6);
-                document.getElementById('input-lon').value = lon.toFixed(6);
-                modSelectareCoordonate = false;
-
-                if (markerCursor) {
-                    map.removeLayer(markerCursor);
-                    markerCursor = null;
-                }
-
-                if (markerFix) {
-                    map.removeLayer(markerFix);
-                }
-
-                markerFix = L.circleMarker([lat, lon], {
-                    radius: 12,
-                    color: '#00ffcc',
-                    fillColor: '#00ffcc',
-                    fillOpacity: 0.8
-                }).addTo(map);
-
-                markerFix.bindPopup("<b>Punct fixat!</b>").openPopup();
-
-                document.getElementById('modal-admin').style.display = "block";
-            }
-        });
 
         function inchideModal() {
             document.getElementById('modal-admin').style.display = "none";
@@ -315,7 +261,7 @@
             var media = document.getElementById('input-media').value;
 
             if (isNaN(lat) || isNaN(lon)) {
-                alert("Coordonate invalide!");
+                alert("Te rog introdu coordonate valide!");
                 return;
             }
 
