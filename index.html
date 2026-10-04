@@ -58,7 +58,7 @@
 
     <div id="harta">
         <button id="btn-toggle-admin" onclick="deschideModAdaugare()">+ Adaugă Punct Nou</button>
-        <div id="badge-versiune">Versiune: v1.0.22</div>
+        <div id="badge-versiune">Versiune: v1.0.23</div>
     </div>
 
     <!-- Panou Informații -->
@@ -209,30 +209,41 @@
             return null;
         }
 
+        // --- ÎNCĂRCARE UNITARĂ ȘI SIGURĂ A PUNCTELOR ---
         function incarcaToatePunctele() {
             layerGrupPuncte.clearLayers();
 
             fetch('puncte.geojson')
                 .then(res => res.json())
                 .then(data => {
-                    adaugaLayerPuncte(data);
-                    incarcaPuncteSalvateLocal();
+                    // Prereluăm și punctele salvate local în browser
+                    var puncteLocale = localStorage.getItem('puncte_modificate_pietroasa');
+                    if (puncteLocale) {
+                        var dataLocale = JSON.parse(puncteLocale);
+                        if (dataLocale && dataLocale.features) {
+                            data.features = data.features.concat(dataLocale.features);
+                        }
+                    }
+                    randreazaPunctePeHartă(data);
                 })
                 .catch(err => {
                     console.log("Nu s-a putut citi puncte.geojson, se afișează doar cele locale.");
-                    incarcaPuncteSalvateLocal();
+                    var puncteLocale = localStorage.getItem('puncte_modificate_pietroasa');
+                    if (puncteLocale) {
+                        var dataLocale = JSON.parse(puncteLocale);
+                        randreazaPunctePeHartă(dataLocale);
+                    }
                 });
         }
 
-        // Randare vizuală cu markere Leaflet explicite pentru fiecare punct
-        function adaugaLayerPuncte(data) {
+        function randreazaPunctePeHartă(data) {
             L.geoJSON(data, {
                 pointToLayer: function (feature, latlng) {
-                    return L.marker(latlng); // Creează pinul vizibil pe hartă
+                    return L.marker(latlng);
                 },
                 onEachFeature: function(feature, layer) {
                     var codId = feature.properties.Identification_Code || "Punct";
-                    layer.bindTooltip(codId, {permanent: false, direction: 'top'}); // Afișează codul la hover
+                    layer.bindTooltip(codId, {permanent: false, direction: 'top'});
                     
                     layer.on('click', function(e) {
                         L.DomEvent.stopPropagation(e);
@@ -241,14 +252,6 @@
                     });
                 }
             }).addTo(layerGrupPuncte);
-        }
-
-        function incarcaPuncteSalvateLocal() {
-            var puncteLocale = localStorage.getItem('puncte_modificate_pietroasa');
-            if (puncteLocale) {
-                var dataLocale = JSON.parse(puncteLocale);
-                adaugaLayerPuncte(dataLocale);
-            }
         }
 
         incarcaToatePunctele();
@@ -304,7 +307,7 @@
 
             inchideModal();
             incarcaToatePunctele();
-            alert("Punctul a fost adăugat, salvat local și va apărea instant pe hartă!");
+            alert("Punctul a fost adăugat și a apărut imediat pe hartă!");
         }
     </script>
 </body>
