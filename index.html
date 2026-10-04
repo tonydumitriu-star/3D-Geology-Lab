@@ -2,9 +2,13 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Sketchfab Curat - Pietroasa</title>
+    <title>Hartă Geologică 3D & Cluster Puncte - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     
     <style>
         body { display: flex; margin: 0; height: 100vh; font-family: Arial, sans-serif; background: #1e1e1e; color: #fff; }
@@ -99,7 +103,7 @@
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
             <button class="btn-actiune btn-refresh" onclick="reprospateazaHartaFortat()">🔄 Reîmprospătează Forțat</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.61</div>
+        <div id="badge-versiune">Versiune: v1.0.62</div>
     </div>
 
     <!-- Panou Informații -->
@@ -136,8 +140,8 @@
         <label>Descriere / Vârstă geologică:</label>
         <textarea id="input-desc" placeholder="Descriere afloriment..."></textarea>
 
-        <label>Link Embed Sketchfab (ex: https://sketchfab.com/models/.../embed):</label>
-        <input type="text" id="input-skfb" placeholder="https://sketchfab.com/models/.../embed">
+        <label>Link sau Cod HTML Embed Sketchfab:</label>
+        <textarea id="input-skfb" placeholder="https://sketchfab.com/models/... sau codul complet <iframe ...>"></textarea>
 
         <label>Link-uri Poze / Filme Drive:</label>
         <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
@@ -180,6 +184,8 @@
 
         var slideIndex = 0;
         var pinMobil = null;
+
+        // Toate cele 9 puncte actualizate direct din JSON-ul tău
         var toatePuncteleExistente = [
             {
                 "type": "Feature",
@@ -206,7 +212,7 @@
                 "properties": {
                     "Identification_Code": "asdfasF",
                     "Short_Description": "AWSEFAWSF",
-                    "3D_Model": "",
+                    "3D_Model": "https://sketchfab.com/models/7dd2382a2d1d4cec83be3ad8af7db995/embed",
                     "gx_media_links": ""
                 },
                 "geometry": { "type": "Point", "coordinates": [22.274094, 46.578215] }
@@ -216,7 +222,7 @@
                 "properties": {
                     "Identification_Code": "ZSGV",
                     "Short_Description": "",
-                    "3D_Model": "",
+                    "3D_Model": "https://sketchfab.com/models/7dd2382a2d1d4cec83be3ad8af7db995/embed",
                     "gx_media_links": ""
                 },
                 "geometry": { "type": "Point", "coordinates": [22.646942, 46.426972] }
@@ -226,14 +232,62 @@
                 "properties": {
                     "Identification_Code": "qwwqdQD",
                     "Short_Description": "qwdQWD",
-                    "3D_Model": "https://sketchfab.com/models/7dd2382a2d1d4cec83be3ad8af7db995/embed",
+                    "3D_Model": "https://skfb.ly/oIGTu",
                     "gx_media_links": ""
                 },
                 "geometry": { "type": "Point", "coordinates": [22.624283, 46.58317] }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "Identification_Code": "ASF",
+                    "Short_Description": "ASFAFS",
+                    "3D_Model": "<div class=\"sketchfab-embed-wrapper\"> <iframe title=\"Outcrop (IPD_2023_ Af_1-Malusteni)\" frameborder=\"0\" allowfullscreen mozallowfullscreen=\"true\" webkitallowfullscreen=\"true\" allow=\"autoplay; fullscreen; xr-spatial-tracking\" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src=\"https://sketchfab.com/models/ba84651817f44b2481c6244f46d59aae/embed\"> </iframe> </div>",
+                    "gx_media_links": ""
+                },
+                "geometry": { "type": "Point", "coordinates": [22.940826, 46.697493] }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "Identification_Code": "1",
+                    "Short_Description": "aasd",
+                    "3D_Model": "https://skfb.ly/oIGSY",
+                    "gx_media_links": ""
+                },
+                "geometry": { "type": "Point", "coordinates": [22.624283, 46.58317] }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "Identification_Code": "2",
+                    "Short_Description": "asfw",
+                    "3D_Model": "https://skfb.ly/oIGSY",
+                    "gx_media_links": ""
+                },
+                "geometry": { "type": "Point", "coordinates": [23.171539, 46.314687] }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "Identification_Code": "5553q21145",
+                    "Short_Description": "awefawf",
+                    "3D_Model": "<div class=\"sketchfab-embed-wrapper\"> <iframe title=\"Outcrop (IPD_2023_ Af_3-Beresti)\" frameborder=\"0\" allowfullscreen mozallowfullscreen=\"true\" webkitallowfullscreen=\"true\" allow=\"autoplay; fullscreen; xr-spatial-tracking\" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src=\"https://sketchfab.com/models/7dd2382a2d1d4cec83be3ad8af7db995/embed\"> </iframe> </div>",
+                    "gx_media_links": ""
+                },
+                "geometry": { "type": "Point", "coordinates": [22.885208, 46.308996] }
             }
         ]; 
         var puncteModificateSauNoi = {}; 
-        var layerPuncteHarta = L.layerGroup().addTo(map);
+
+        // Folosim cluster pentru a separa punctele suprapuse
+        var clusterPuncteHarta = L.markerClusterGroup({
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true
+        });
+        map.addLayer(clusterPuncteHarta);
+
         var punctCurentSelectat = null;
 
         function schimbaSlide(n) {
@@ -254,11 +308,25 @@
             window.location.href = window.location.pathname + '?v=' + timestamp;
         }
 
+        // Parsare universală Sketchfab (suportă HTML embed, link embed direct și link scurt skfb.ly)
         function obtineEmbedSketchfab(link) {
             if (!link || typeof link !== 'string') return null;
             link = link.trim();
+            
+            if (link.includes("<iframe")) {
+                var matchSrc = link.match(/src="([^"]+)"/);
+                if (matchSrc && matchSrc[1]) {
+                    link = matchSrc[1];
+                }
+            }
             if (link.includes("/embed")) {
                 return link.split("?")[0];
+            }
+            if (link.includes("skfb.ly/")) {
+                var cod = link.split("skfb.ly/")[1].trim().split(/[\s/?#]+/)[0];
+                if (cod) {
+                    return `https://sketchfab.com/models/${cod}/embed`;
+                }
             }
             var segmente = link.split('/');
             for (var i = 0; i < segmente.length; i++) {
@@ -336,7 +404,7 @@
         }
 
         function incarcaHartaPuncte() {
-            layerPuncteHarta.clearLayers();
+            clusterPuncteHarta.clearLayers();
             
             var toatePuncteleFinal = toatePuncteleExistente.map(function(pt) {
                 var cod = pt.properties.Identification_Code;
@@ -381,7 +449,7 @@
                     afiseazaDetaliiPunct(feature);
                 });
 
-                layerPuncteHarta.addLayer(marker);
+                clusterPuncteHarta.addLayer(marker);
             });
         }
 
