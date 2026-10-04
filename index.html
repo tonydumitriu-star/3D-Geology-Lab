@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Fallback Sketchfab - Pietroasa</title>
+    <title>Hartă Geologică 3D & Sketchfab Embed Pur - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -103,14 +103,13 @@
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
             <button class="btn-actiune btn-refresh" onclick="reprospateazaHartaFortat()">🔄 Reîmprospătează Forțat</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.58</div>
+        <div id="badge-versiune">Versiune: v1.0.60</div>
     </div>
 
     <!-- Panou Informații -->
     <div id="panou-info">
         <h2 id="titlu-afloriment">Selectează un punct</h2>
         
-        <!-- Buton direct pentru deschiderea modelului 3D în tab nou dacă iframe-ul e blocat de browser -->
         <a id="btn-sketchfab-extern" href="#" target="_blank">📦 Deschide modelul 3D pe Sketchfab ↗</a>
         
         <iframe id="iframe-sketchfab" class="sketchfab-embed" allow="autoplay; fullscreen; vr" allowfullscreen="true"></iframe>
@@ -143,8 +142,8 @@
         <label>Descriere / Vârstă geologică:</label>
         <textarea id="input-desc" placeholder="Descriere afloriment..."></textarea>
 
-        <label>Link Sketchfab (ex: https://skfb.ly/oIGTu):</label>
-        <input type="text" id="input-skfb" placeholder="https://skfb.ly/...">
+        <label>Link Embed Sketchfab (ex: https://sketchfab.com/models/.../embed):</label>
+        <input type="text" id="input-skfb" placeholder="https://sketchfab.com/models/.../embed">
 
         <label>Link-uri Poze / Filme Drive:</label>
         <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
@@ -193,7 +192,7 @@
                 "properties": {
                     "Identification_Code": "aqwfdasd",
                     "Short_Description": "afsdfasfd",
-                    "3D_Model": "https://skfb.ly/oQGwE",
+                    "3D_Model": "https://sketchfab.com/models/7dd2382a2d1d4cec83be3ad8af7db995/embed",
                     "gx_media_links": "https://drive.google.com/file/d/1bN-MDS33g0ZDoeXhvoPVG3d2qyz28kHL/view?usp=drive_link\nhttps://drive.google.com/file/d/1bHa89aW5HjUP3ajgxvQn8Q2X4Wa2SBSO/view?usp=drive_link"
                 },
                 "geometry": { "type": "Point", "coordinates": [22.627716, 46.742213] }
@@ -203,7 +202,7 @@
                 "properties": {
                     "Identification_Code": "sdfw32svc",
                     "Short_Description": "sa\\c sdac\\scsc  sadf asf34",
-                    "3D_Model": "https://skfb.ly/oIGTu",
+                    "3D_Model": "https://sketchfab.com/models/7dd2382a2d1d4cec83be3ad8af7db995/embed",
                     "gx_media_links": "https://drive.google.com/file/d/116NiwNTdFvV_-r1YOFtmEVhqJHebFac_/view?usp=drive_link\nhttps://drive.google.com/file/d/12Fn9AYw8DTH5E4OlzqStVoEh3XkEuxfY/view?usp=drive_link"
                 },
                 "geometry": { "type": "Point", "coordinates": [22.550125, 46.819798] }
@@ -233,7 +232,7 @@
                 "properties": {
                     "Identification_Code": "qwwqdQD",
                     "Short_Description": "qwdQWD",
-                    "3D_Model": "https://skfb.ly/oIGTu",
+                    "3D_Model": "https://sketchfab.com/models/7dd2382a2d1d4cec83be3ad8af7db995/embed",
                     "gx_media_links": ""
                 },
                 "geometry": { "type": "Point", "coordinates": [22.624283, 46.58317] }
@@ -261,56 +260,53 @@
             window.location.href = window.location.pathname + '?v=' + timestamp;
         }
 
+        // Citire directă curată a linkului de embed
+        function parseazaSketchfab(inputVal) {
+            if (!inputVal || typeof inputVal !== 'string') return { embedUrl: "", externalUrl: "" };
+            inputVal = inputVal.trim();
+
+            var embedUrl = "";
+            var externalUrl = "";
+
+            if (inputVal.includes("/embed")) {
+                embedUrl = inputVal.split("?")[0];
+                externalUrl = embedUrl.replace("/embed", "");
+            } else {
+                var segmente = inputVal.split('/');
+                for (var i = 0; i < segmente.length; i++) {
+                    if (segmente[i].length === 32) {
+                        embedUrl = `https://sketchfab.com/models/${segmente[i]}/embed`;
+                        externalUrl = `https://sketchfab.com/models/${segmente[i]}`;
+                        break;
+                    }
+                }
+            }
+
+            return { embedUrl: embedUrl, externalUrl: externalUrl };
+        }
+
         function afiseazaDetaliiPunct(feature) {
             var props = feature.properties;
             punctCurentSelectat = feature;
             
             document.getElementById('titlu-afloriment').innerText = props.Identification_Code || props.name || "Afloriment";
 
-            var modelLink = props["3D_Model"] ? props["3D_Model"].trim() : "";
+            var skfbData = parseazaSketchfab(props["3D_Model"]);
             var iframeSkfb = document.getElementById('iframe-sketchfab');
             var btnExtern = document.getElementById('btn-sketchfab-extern');
 
-            if (modelLink !== "") {
-                // Generăm linkul de embed pentru iframe
-                var embedUrl = "";
-                var linkExternUrl = modelLink;
-
-                if (modelLink.includes("skfb.ly/")) {
-                    var parti = modelLink.split("skfb.ly/");
-                    if (parti[1]) {
-                        var cod = parti[1].trim().split(/[\s/?#]+/)[0];
-                        if (cod) {
-                            embedUrl = `https://sketchfab.com/models/${cod}/embed`;
-                            linkExternUrl = `https://sketchfab.com/3d-models/${cod}`;
-                        }
-                    }
-                } else if (modelLink.includes("/embed")) {
-                    embedUrl = modelLink.split("?")[0];
-                } else {
-                    var segmente = modelLink.split('/');
-                    for (var i = 0; i < segmente.length; i++) {
-                        if (segmente[i].length === 32) {
-                            embedUrl = `https://sketchfab.com/models/${segmente[i]}/embed`;
-                            break;
-                        }
-                    }
-                }
-
-                if (embedUrl) {
-                    iframeSkfb.src = `${embedUrl}?autostart=1&ui_infos=0&ui_inspector=1`;
-                    iframeSkfb.style.display = "block";
-                } else {
-                    iframeSkfb.src = "";
-                    iframeSkfb.style.display = "none";
-                }
-
-                // Setăm și butonul extern de rezervă
-                btnExtern.href = linkExternUrl.includes("skfb.ly/") ? linkExternUrl : modelLink;
-                btnExtern.style.display = "block";
+            if (skfbData.embedUrl !== "") {
+                iframeSkfb.src = `${skfbData.embedUrl}?autostart=1&ui_infos=0&ui_inspector=1`;
+                iframeSkfb.style.display = "block";
             } else {
                 iframeSkfb.src = "";
                 iframeSkfb.style.display = "none";
+            }
+
+            if (skfbData.externalUrl !== "") {
+                btnExtern.href = skfbData.externalUrl;
+                btnExtern.style.display = "block";
+            } else {
                 btnExtern.style.display = "none";
             }
 
