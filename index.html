@@ -60,7 +60,7 @@
 
     <div id="harta">
         <button id="btn-toggle-admin" onclick="activeazaModDragDrop()">+ Adaugă Punct (Sesiune)</button>
-        <div id="badge-versiune">Versiune: v1.0.36</div>
+        <div id="badge-versiune">Versiune: v1.0.37</div>
     </div>
 
     <!-- Panou Informații -->
@@ -130,8 +130,8 @@
 
         var slideIndex = 0;
         var pinMobil = null;
-        var listaPuncteSesiune = []; // Memoria temporară a punctelor adăugate în sesiune
-        var layerSesiune = L.layerGroup().addTo(map); // Afișează vizual punctele adăugate în sesiune pe hartă
+        var listaPuncteSesiune = [];
+        var layerSesiune = L.layerGroup().addTo(map);
 
         function schimbaSlide(n) {
             var slides = document.getElementsByClassName("carusel-slide");
@@ -234,7 +234,6 @@
             return null;
         }
 
-        // Încărcare din puncte.geojson existent
         fetch('puncte.geojson')
             .then(res => res.json())
             .then(data => {
@@ -256,7 +255,6 @@
             })
             .catch(err => console.log("Eroare la încărcarea fișierului puncte.geojson:", err));
 
-        // Activare sistem Drag & Drop pentru sesiune
         function activeazaModDragDrop() {
             var centru = map.getCenter();
             
@@ -304,7 +302,7 @@
         }
 
         function adaugaPunctInSesiune() {
-            var cod = document.getElementById('input-cod'].value || "H_Nou";
+            var cod = document.getElementById('input-cod').value || "H_Nou";
             var lat = parseFloat(document.getElementById('input-lat').value);
             var lon = parseFloat(document.getElementById('input-lon').value);
             var desc = document.getElementById('input-desc').value;
@@ -330,24 +328,19 @@
                 }
             };
 
-            // Adăugăm în lista sesiunii
             listaPuncteSesiune.push(featureNou);
             document.getElementById('contor-sesiune').innerText = `Puncte adăugate în sesiunea curentă: ${listaPuncteSesiune.length}`;
 
-            // Desenăm un mic marker verde pe hartă pentru a confirma că a fost salvat în sesiune
             L.circleMarker([lat, lon], { radius: 8, color: '#00ffcc', fillColor: '#00ffcc', fillOpacity: 0.9 })
                 .bindTooltip(cod, {permanent: true, direction: 'top'})
                 .addTo(layerSesiune);
 
-            // Resetăm formularul pentru următorul punct
             document.getElementById('input-cod').value = "";
             document.getElementById('input-desc').value = "";
             document.getElementById('input-skfb').value = "";
             document.getElementById('input-media').value = "";
 
-            alert(`Punctul "${cod}" a fost adăugat în sesiune! Poți trage din nou bulina roșie pentru următorul punct.`);
-            
-            // Ascundem modalul ca să poți muta pinul din nou
+            alert(`Punctul "${cod}" a fost adăugat în sesiune!`);
             document.getElementById('modal-admin').style.display = "none";
         }
 
