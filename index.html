@@ -2,13 +2,13 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D - Pietroasa</title>
+    <title>Hartă Geologică 3D & Drag&Drop - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
         body { display: flex; margin: 0; height: 100vh; font-family: Arial, sans-serif; background: #1e1e1e; color: #fff; }
-        #harta { width: 65%; height: 100%; position: relative; cursor: crosshair; }
+        #harta { width: 65%; height: 100%; position: relative; }
         #panou-info { width: 35%; height: 100%; padding: 25px; overflow-y: auto; box-sizing: border-box; border-left: 2px solid #333; }
         
         .sketchfab-embed { width: 100%; height: 260px; border: none; border-radius: 8px; margin-bottom: 15px; display: none; }
@@ -58,8 +58,8 @@
 <body>
 
     <div id="harta">
-        <button id="btn-toggle-admin" onclick="deschideModAdaugare()">+ Adaugă Punct Nou</button>
-        <div id="badge-versiune">Versiune: v1.0.33</div>
+        <button id="btn-toggle-admin" onclick="activeazaModDragDrop()">+ Adaugă Punct (Drag & Drop)</button>
+        <div id="badge-versiune">Versiune: v1.0.34</div>
     </div>
 
     <!-- Panou Informații -->
@@ -79,17 +79,17 @@
 
     <!-- Modal Generator Cod JSON -->
     <div id="modal-admin">
-        <h3>Generator Punct GeoJSON (Precizie Google Maps)</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top:0;">Coordonatele preluate sunt acum calibrate 100% corect.</p>
+        <h3>Generator Punct GeoJSON (Drag & Drop)</h3>
+        <p style="font-size: 12px; color: #aaa; margin-top:0;">Trage bulina roșie pe hartă exact unde ai nevoie, apoi completează datele de mai jos.</p>
         
         <label>Cod Identificare (ex: H100):</label>
         <input type="text" id="input-cod" placeholder="H100">
 
-        <label>Latitudine:</label>
-        <input type="text" id="input-lat" placeholder="46.5833">
+        <label>Latitudine (preluată de la pinul mobil):</label>
+        <input type="text" id="input-lat" readonly style="color: #00ffcc; background: #151515;">
 
-        <label>Longitudine:</label>
-        <input type="text" id="input-lon" placeholder="22.6246">
+        <label>Longitudine (preluată de la pinul mobil):</label>
+        <input type="text" id="input-lon" readonly style="color: #00ffcc; background: #151515;">
 
         <label>Descriere / Vârstă geologică:</label>
         <textarea id="input-desc" placeholder="Descriere afloriment..."></textarea>
@@ -101,10 +101,10 @@
         <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
 
         <label>Codul GeoJSON Generat:</label>
-        <textarea id="rezultat-json" readonly placeholder="Apasă 'Generează Cod'..."></textarea>
+        <textarea id="rezultat-json" readonly placeholder="Apasă 'Generează Cod GeoJSON'..."></textarea>
 
         <div class="modal-buttons">
-            <button class="btn-genereaza" onclick="genereazaCodJson()">Generează Cod</button>
+            <button class="btn-genereaza" onclick="genereazaCodJson()">Generează Cod GeoJSON</button>
             <button class="btn-inchide" onclick="inchideModal()">Închide</button>
         </div>
     </div>
@@ -126,8 +126,7 @@
         }, 200);
 
         var slideIndex = 0;
-        var modSelectareCoordonate = false;
-        var markerTemporar = null;
+        var pinMobil = null; // Pinul pe care îl poți trage cu mouse-ul
 
         function schimbaSlide(n) {
             var slides = document.getElementsByClassName("carusel-slide");
@@ -246,67 +245,63 @@
             })
             .catch(err => console.log("Eroare la încărcarea fișierului puncte.geojson:", err));
 
-        function deschideModAdaugare() {
-            modSelectareCoordonate = true;
-            alert("Mod activat! Dă click dreapta oriunde pe hartă (exact ca în Google Maps) pentru a prelua coordonatele.");
-        }
-
-        // PRELUARE COORDONATE PRIN CLICK DREAPTA (Exact ca în Google Maps)
-        map.on('contextmenu', function(e) {
-            L.DomEvent.stopPropagation(e);
+        // Activare sistem Drag & Drop
+        function activeazaModDragDrop() {
+            var centru = map.getCenter();
             
-            var lat = e.latlng.lat;
-            var lon = e.latlng.lng;
-
-            document.getElementById('input-lat').value = lat.toFixed(6);
-            document.getElementById('input-lon').value = lon.toFixed(6);
-            modSelectareCoordonate = false;
-
-            if (markerTemporar) {
-                map.removeLayer(markerTemporar);
+            if (pinMobil) {
+                map.removeLayer(pinMobil);
             }
 
-            markerTemporar = L.circleMarker([lat, lon], {
-                radius: 12,
-                color: '#ff0055',
-                fillColor: '#ff0055',
-                fillOpacity: 0.85
+            // Cream un cerc roșu mare care poate fi tras cu mouse-ul (draggable: true)
+            pinMobil = L.circleMarker([centru.lat, centru.lng], {
+                radius: 14,
+                color: '#ffffff',
+                weight: 3,
+                fillColor: '#ff0033',
+                fillOpacity: 1.0,
+                draggable: true // Permite mutarea manuală
             }).addTo(map);
 
-            markerTemporar.bindPopup(`<b>Coordonate copiate!</b><br>Lat: ${lat.toFixed(5)}<br>Lon: ${lon.toFixed(5)}`).openPopup();
+            // Facem cercul interactiv pentru drag manual
+            pinMobil.bindPopup("<b>Trage-mă cu mouse-ul!</b><br>Pune-mă exact pe afloriment.").openPopup();
 
-            document.getElementById('modal-admin').style.display = "block";
-        });
-
-        // Opțional: și prin click simplu dacă modul este activat
-        map.on('click', function(e) {
-            if (modSelectareCoordonate) {
-                var lat = e.latlng.lat;
-                var lon = e.latlng.lng;
-
-                document.getElementById('input-lat').value = lat.toFixed(6);
-                document.getElementById('input-lon').value = lon.toFixed(6);
-                modSelectareCoordonate = false;
-
-                if (markerTemporar) {
-                    map.removeLayer(markerTemporar);
-                }
-
-                markerTemporar = L.circleMarker([lat, lon], {
-                    radius: 12,
-                    color: '#ff0055',
-                    fillColor: '#ff0055',
-                    fillOpacity: 0.85
-                }).addTo(map);
-
-                markerTemporar.bindPopup(`<b>Coordonate copiate!</b><br>Lat: ${lat.toFixed(5)}<br>Lon: ${lon.toFixed(5)}`).openPopup();
-
-                document.getElementById('modal-admin').style.display = "block";
+            // Actualizăm câmpurile din formular automat când utilizatorul mută pinul
+            function actualizeazaCoordonatePin() {
+                var latlng = pinMobil.getLatLng();
+                document.getElementById('input-lat').value = latlng.lat.toFixed(6);
+                document.getElementById('input-lon').value = latlng.lng.toFixed(6);
             }
-        });
+
+            actualizeazaCoordonatePin();
+
+            // Evenimente de tragere (Drag)
+            var isDragging = false;
+            pinMobil.on('mousedown', function() { isDragging = true; map.dragging.disable(); });
+            map.on('mousemove', function(e) {
+                if (isDragging) {
+                    pinMobil.setLatLng(e.latlng);
+                    actualizeazaCoordonatePin();
+                }
+            });
+            map.on('mouseup', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    map.dragging.enable();
+                    actualizeazaCoordonatePin();
+                    document.getElementById('modal-admin').style.display = "block";
+                }
+            });
+
+            alert("Am plasat o bulină roșie în centrul hărții! Trage-o cu mouse-ul exact unde ai nevoie pe imaginea geologică, apoi eliberează click-ul.");
+        }
 
         function inchideModal() {
             document.getElementById('modal-admin').style.display = "none";
+            if (pinMobil) {
+                map.removeLayer(pinMobil);
+                pinMobil = null;
+            }
         }
 
         function genereazaCodJson() {
@@ -318,7 +313,7 @@
             var media = document.getElementById('input-media').value;
 
             if (isNaN(lat) || isNaN(lon)) {
-                alert("Coordonate invalide!");
+                alert("Te rog trage mai întâi bulina roșie pe hartă!");
                 return;
             }
 
