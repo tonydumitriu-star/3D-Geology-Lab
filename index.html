@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Fix Final - Pietroasa</title>
+    <title>Hartă Geologică 3D & Sketchfab Skfb.ly Fix - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -49,11 +49,8 @@
             line-height: 24px;
         }
 
-        /* Control straturi mutat ferm în stânga jos, deasupra badge-ului de versiune */
-        .leaflet-bottom.leaflet-left {
-            bottom: 40px !important;
-            left: 10px !important;
-        }
+        /* Control straturi jos în stânga */
+        .leaflet-bottom.leaflet-left { bottom: 40px !important; left: 10px !important; }
         .leaflet-control-layers {
             background: rgba(30, 30, 30, 0.95) !important;
             color: #fff !important;
@@ -99,7 +96,7 @@
             <button class="btn-actiune" onclick="activeazaModDragDrop()">+ Adaugă Punct Nou</button>
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.45</div>
+        <div id="badge-versiune">Versiune: v1.0.47</div>
     </div>
 
     <!-- Panou Informații -->
@@ -137,7 +134,7 @@
         <textarea id="input-desc" placeholder="Descriere afloriment..."></textarea>
 
         <label>Link Sketchfab (Model 3D):</label>
-        <input type="text" id="input-skfb" placeholder="https://skfb.ly/...">
+        <input type="text" id="input-skfb" placeholder="https://skfb.ly/oIGTu">
 
         <label>Link-uri Poze / Filme Drive:</label>
         <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
@@ -171,7 +168,6 @@
         var hartaGeologica = L.imageOverlay(imageUrl, imageBounds, {opacity: 1.0});
         hartaGeologica.addTo(map);
 
-        // Control straturi mutat explicit în colțul stânga-jos (zona dedicată inferioară stângă)
         var controlStraturi = L.control.layers(null, { "056-A-Pietroasa": hartaGeologica }, {collapsed: false, position: 'bottomleft'});
         controlStraturi.addTo(map);
 
@@ -199,7 +195,7 @@
             slides[slideIndex].classList.add("active");
         }
 
-        // Funcția Sketchfab restaurată la forma care funcționa perfect în v1.0.35
+        // Parsare Sketchfab optimizată fix pentru formatul skfb.ly/XXXXX
         function obtineEmbedSketchfab(link) {
             if (!link || typeof link !== 'string') return null;
             link = link.trim();
@@ -211,15 +207,20 @@
                 }
             }
             
-            if (link.includes("/embed")) {
+            // Dacă conține skfb.ly/, luăm linkul curat și îi punem /embed la sfârșit
+            if (link.includes("skfb.ly/")) {
+                var baza = link.split("?")[0].trim();
+                if (!baza.endsWith("/embed")) {
+                    baza = baza.replace(/\/$/, ""); // scoate slash-ul de la final dacă există
+                    return baza + "/embed";
+                }
+                return baza;
+            }
+
+            if (link.includes("sketchfab.com/") && link.includes("/embed")) {
                 return link.split("?")[0];
             }
-            
-            if (link.includes("skfb.ly/")) {
-                var cod = link.split("skfb.ly/")[1].trim().split(/[\s/?#]+/)[0];
-                return `https://sketchfab.com/models/${cod}/embed`;
-            }
-            
+
             if (link.includes("sketchfab.com/")) {
                 var segmente = link.split('/');
                 for (var i = 0; i < segmente.length; i++) {
@@ -228,6 +229,7 @@
                     }
                 }
             }
+            
             return null;
         }
 
