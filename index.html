@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Simbol Afloriment & Index - Pietroasa</title>
+    <title>Hartă Geologică 3D & Fix Sketchfab & Straturi - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -36,7 +36,7 @@
         .btn-editeaza-selectat { background: #2196F3; color: white; display: none; margin-top: 15px; width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-editeaza-selectat:hover { background: #0b7dda; }
         
-        /* Simbol Special Afloriment (Stil Geologic Pro) */
+        /* Simbol Special Afloriment (Index pe hartă) */
         .marker-afloriment {
             background: #e0a96d;
             border: 2px solid #ffffff;
@@ -49,18 +49,21 @@
             line-height: 24px;
         }
 
-        /* Control straturi în dreapta jos */
-        .leaflet-bottom.leaflet-right { bottom: 40px; right: 10px; }
-        .leaflet-control-layers {
-            background: rgba(30, 30, 30, 0.9) !important;
-            color: #fff !important;
-            border: 1px solid #444 !important;
-            border-radius: 6px !important;
-            padding: 8px !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
+        /* Control straturi fixat strict în dreapta jos */
+        .leaflet-bottom.leaflet-right { 
+            bottom: 35px !important; 
+            right: 15px !important; 
         }
-        .leaflet-control-layers-expanded { color: #fff !important; background: rgba(30, 30, 30, 0.95) !important; }
-        .leaflet-control-layers label { color: #e0a96d !important; font-weight: bold; font-size: 13px; }
+        .leaflet-control-layers {
+            background: rgba(30, 30, 30, 0.95) !important;
+            color: #fff !important;
+            border: 1px solid #555 !important;
+            border-radius: 6px !important;
+            padding: 10px !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5) !important;
+        }
+        .leaflet-control-layers-expanded { color: #fff !important; background: rgba(30, 30, 30, 0.98) !important; }
+        .leaflet-control-layers label { color: #e0a96d !important; font-weight: bold; font-size: 13px; cursor: pointer; }
 
         /* Ferestre Modale */
         .modal-admin { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; border: 2px solid #e0a96d; padding: 25px; z-index: 2000; width: 520px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
@@ -96,7 +99,7 @@
             <button class="btn-actiune" onclick="activeazaModDragDrop()">+ Adaugă Punct Nou</button>
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.42</div>
+        <div id="badge-versiune">Versiune: v1.0.43</div>
     </div>
 
     <!-- Panou Informații -->
@@ -168,7 +171,9 @@
         var hartaGeologica = L.imageOverlay(imageUrl, imageBounds, {opacity: 1.0});
         hartaGeologica.addTo(map);
 
-        L.control.layers(null, { "056-A-Pietroasa": hartaGeologica }, {collapsed: false}).addTo(map);
+        // Control straturi mutat explicit în dreapta jos
+        var controlStraturi = L.control.layers(null, { "056-A-Pietroasa": hartaGeologica }, {collapsed: false});
+        controlStraturi.addTo(map);
 
         setTimeout(function() {
             map.invalidateSize();
@@ -194,23 +199,30 @@
             slides[slideIndex].classList.add("active");
         }
 
+        // Parsare Sketchfab ultra-robustă (reparată complet)
         function obtineEmbedSketchfab(link) {
             if (!link || typeof link !== 'string') return null;
             link = link.trim();
+            
             if (link.includes("<iframe")) {
                 var matchSrc = link.match(/src="([^"]+)"/);
                 if (matchSrc && matchSrc[1]) {
                     link = matchSrc[1];
                 }
             }
-            if (link.includes("/embed")) {
-                return link.split("?")[0];
+            
+            if (link.includes("sketchfab.com/models/")) {
+                var part = link.split("sketchfab.com/models/")[1];
+                var idModel = part.split("/")[0];
+                return `https://sketchfab.com/models/${idModel}/embed`;
             }
+            
             if (link.includes("skfb.ly/")) {
-                var cod = link.split("skfb.ly/")[1].trim().split(/[\s/?#]+/)[0];
-                return `https://sketchfab.com/models/${cod}/embed`;
+                var codScurt = link.split("skfb.ly/")[1].trim().split(/[\s/?#]+/)[0];
+                return `https://sketchfab.com/models/${codScurt}/embed`;
             }
-            if (link.includes("sketchfab.com/")) {
+            
+            if (link.includes("sketchfab.com/3d-models/")) {
                 var segmente = link.split('/');
                 for (var i = 0; i < segmente.length; i++) {
                     if (segmente[i].length === 32) {
@@ -218,6 +230,7 @@
                     }
                 }
             }
+            
             return null;
         }
 
@@ -317,13 +330,11 @@
                         }
                     }
 
-                    // Parcurgem punctele și le desenăm cu simbolul special și indexul numeric (1, 2, 3...)
                     toatePuncteleFinal.forEach(function(feature, index) {
                         var coords = feature.geometry.coordinates;
                         var latlng = [coords[1], coords[0]];
-                        var numarIndex = index + 1; // Indexul de la 1 în sus
+                        var numarIndex = index + 1;
 
-                        // Simbol personalizat tip afloriment geologic cu indexul în interior
                         var customIcon = L.divIcon({
                             className: 'custom-div-icon',
                             html: `<div class="marker-afloriment" style="width: 26px; height: 26px;">${numarIndex}</div>`,
