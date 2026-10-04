@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Sesiune Multi-Puncte - Pietroasa</title>
+    <title>Hartă Geologică 3D & Sesiune Continuă - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -60,7 +60,7 @@
 
     <div id="harta">
         <button id="btn-toggle-admin" onclick="activeazaModDragDrop()">+ Adaugă Punct (Sesiune)</button>
-        <div id="badge-versiune">Versiune: v1.0.37</div>
+        <div id="badge-versiune">Versiune: v1.0.38</div>
     </div>
 
     <!-- Panou Informații -->
@@ -81,8 +81,8 @@
     <!-- Modal Sesiune Multi-Puncte -->
     <div id="modal-admin">
         <h3>Sesiune Adaugă Puncte GeoJSON</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top:0;">Trage bulina roșie pe hartă pentru fiecare punct, completează datele și apasă "Adaugă în Sesiune".</p>
-        <p id="contor-sesiune" style="font-size: 12px; color: #00ffcc; font-weight: bold; margin: 5px 0;">Puncte adăugate în sesiunea curentă: 0</p>
+        <p style="font-size: 12px; color: #aaa; margin-top:0;">Trage bulina roșie pe hartă, completează datele și apasă "Adaugă în Sesiune".</p>
+        <p id="contor-sesiune" style="font-size: 12px; color: #00ffcc; font-weight: bold; margin: 5px 0;">Puncte noi adăugate în această sesiune: 0</p>
         
         <label>Cod Identificare (ex: H101):</label>
         <input type="text" id="input-cod" placeholder="H101">
@@ -102,8 +102,8 @@
         <label>Link-uri Poze / Filme Drive:</label>
         <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
 
-        <label>Codul GeoJSON Complet (pentru fișierul tău):</label>
-        <textarea id="rezultat-json" readonly placeholder="Apasă 'Generează GeoJSON Final' când ai terminat toate punctele..."></textarea>
+        <label>Codul GeoJSON Complet (include punctele vechi + cele noi):</label>
+        <textarea id="rezultat-json" readonly placeholder="Apasă 'Generează GeoJSON Final' când ai terminat..."></textarea>
 
         <div class="modal-buttons">
             <button class="btn-adauga" onclick="adaugaPunctInSesiune()">+ Adaugă în Sesiune</button>
@@ -130,7 +130,8 @@
 
         var slideIndex = 0;
         var pinMobil = null;
-        var listaPuncteSesiune = [];
+        var toatePuncteleExistente = []; 
+        var puncteNoiAdaugate = [];     
         var layerSesiune = L.layerGroup().addTo(map);
 
         function schimbaSlide(n) {
@@ -237,6 +238,9 @@
         fetch('puncte.geojson')
             .then(res => res.json())
             .then(data => {
+                if (data && data.features) {
+                    toatePuncteleExistente = data.features;
+                }
                 L.geoJSON(data, {
                     pointToLayer: function (feature, latlng) {
                         return L.marker(latlng);
@@ -328,8 +332,8 @@
                 }
             };
 
-            listaPuncteSesiune.push(featureNou);
-            document.getElementById('contor-sesiune').innerText = `Puncte adăugate în sesiunea curentă: ${listaPuncteSesiune.length}`;
+            puncteNoiAdaugate.push(featureNou);
+            document.getElementById('contor-sesiune').innerText = `Puncte noi adăugate în această sesiune: ${puncteNoiAdaugate.length}`;
 
             L.circleMarker([lat, lon], { radius: 8, color: '#00ffcc', fillColor: '#00ffcc', fillOpacity: 0.9 })
                 .bindTooltip(cod, {permanent: true, direction: 'top'})
@@ -345,14 +349,16 @@
         }
 
         function genereazaGeoJSONFinal() {
-            if (listaPuncteSesiune.length === 0) {
-                alert("Nu ai adăugat niciun punct în sesiune încă!");
+            var toatePuncteleCombinate = toatePuncteleExistente.concat(puncteNoiAdaugate);
+
+            if (toatePuncteleCombinate.length === 0) {
+                alert("Nu există niciun punct de generat!");
                 return;
             }
 
             var colectieFinala = {
                 "type": "FeatureCollection",
-                "features": listaPuncteSesiune
+                "features": toatePuncteleCombinate
             };
 
             document.getElementById('rezultat-json').value = JSON.stringify(colectieFinala, null, 2);
