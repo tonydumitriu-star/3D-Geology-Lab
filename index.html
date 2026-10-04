@@ -59,7 +59,7 @@
 
     <div id="harta">
         <button id="btn-toggle-admin" onclick="deschideModAdaugare()">+ Adaugă Punct Nou</button>
-        <div id="badge-versiune">Versiune: v1.0.28</div>
+        <div id="badge-versiune">Versiune: v1.0.29</div>
     </div>
 
     <!-- Panou Informații -->
@@ -80,7 +80,7 @@
     <!-- Modal Generator Cod JSON -->
     <div id="modal-admin">
         <h3>Generator Punct GeoJSON</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top:0;">Punctul va fi exact unde ai apăsat pe ecran.</p>
+        <p style="font-size: 12px; color: #aaa; margin-top:0;">Eroarea de decalaj a fost corectată. Click-ul corespunde exact poziției.</p>
         
         <label>Cod Identificare (ex: H100):</label>
         <input type="text" id="input-cod" placeholder="H100">
@@ -114,13 +114,17 @@
 
         var googleSatelit = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 20, attribution: 'Google Satellite' }).addTo(map);
 
-        // Am revenit exact la setul tău original de limite care poziționa perfect imaginea geologică
         var imageUrl = '056-A-Pietroasa.png'; 
         var imageBounds = [[46.494811, 22.492368], [46.671815, 22.756864]]; 
         var hartaGeologica = L.imageOverlay(imageUrl, imageBounds, {opacity: 1.0});
         hartaGeologica.addTo(map);
 
         L.control.layers(null, { "056-A-Pietroasa": hartaGeologica }, {collapsed: false}).addTo(map);
+
+        // Corecție critică pentru containerele flexbox: reîmprospătăm dimensiunile hărții după randare
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 200);
 
         var slideIndex = 0;
         var modSelectareCoordonate = false;
@@ -268,7 +272,7 @@
                     fillOpacity: 0.8
                 }).addTo(map);
 
-                markerTemporar.bindPopup("<b>Punct preluat aici!</b>").openPopup();
+                markerTemporar.bindPopup("<b>Aici ai pus punct!</b>").openPopup();
 
                 document.getElementById('modal-admin').style.display = "block";
             }
