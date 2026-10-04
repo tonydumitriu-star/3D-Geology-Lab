@@ -2,18 +2,18 @@
   "type": "FeatureCollection",
   "features": [
     {
-      "type": "Feature",
-      "properties": {
-        "Identification_Code": "asas",
-        "Short_Description": "asdfsafdf",
-        "3D_Model": "https://skfb.ly/oQGxG",
-        "gx_media_links": "https://drive.google.com/file/d/1OfVxKV3kkATkDZq3mtgxObkfeIy3SzfY/view?usp=drive_link"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          23.119354,
-          46.813219
+  "type": "Feature",
+  "properties": {
+    "Identification_Code": "sdsdf",
+    "Short_Description": "afasdf",
+    "3D_Model": "https://skfb.ly/oQGxG",
+    "gx_media_links": "https://drive.google.com/file/d/1Oe3R7aEHaWR58CezTlI-UxccAL6Zq8pn/view?usp=drive_link\nhttps://drive.google.com/file/d/1OiPpoYPNRXKTG5SD6JL977GHDsfnM7-O/view?usp=drive_link"
+  },
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      23.295135,
+      46.870519
         ]
       }
     }
