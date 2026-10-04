@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Sketchfab Embed Direct - Pietroasa</title>
+    <title>Hartă Geologică 3D & Buton Refresh - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -32,6 +32,8 @@
         .btn-actiune:hover { background: #f0b97d; }
         .btn-export { background: #4CAF50; color: white; }
         .btn-export:hover { background: #45a049; }
+        .btn-refresh { background: #2196F3; color: white; }
+        .btn-refresh:hover { background: #0b7dda; }
 
         .btn-editeaza-selectat { background: #2196F3; color: white; display: none; margin-top: 15px; width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-editeaza-selectat:hover { background: #0b7dda; }
@@ -95,8 +97,9 @@
         <div class="btn-grup">
             <button class="btn-actiune" onclick="activeazaModDragDrop()">+ Adaugă Punct Nou</button>
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
+            <button class="btn-actiune btn-refresh" onclick="reprospateazaHartaFortat()">🔄 Reîmprospătează Harta</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.53</div>
+        <div id="badge-versiune">Versiune: v1.0.55</div>
     </div>
 
     <!-- Panou Informații -->
@@ -133,8 +136,8 @@
         <label>Descriere / Vârstă geologică:</label>
         <textarea id="input-desc" placeholder="Descriere afloriment..."></textarea>
 
-        <label>Link Embed Sketchfab (ex: https://sketchfab.com/models/.../embed):</label>
-        <input type="text" id="input-skfb" placeholder="https://sketchfab.com/models/.../embed">
+        <label>Link Sketchfab (ex: https://skfb.ly/oIGTu):</label>
+        <input type="text" id="input-skfb" placeholder="https://skfb.ly/...">
 
         <label>Link-uri Poze / Filme Drive:</label>
         <textarea id="input-media" placeholder="https://drive.google.com/file/d/..."></textarea>
@@ -195,32 +198,32 @@
             slides[slideIndex].classList.add("active");
         }
 
-        // Folosim direct linkul oficial de embed sau extragem ID-ul curat
+        // Butonul care face singur reîncărcarea forțată (la fel ca Ctrl + F5)
+        function reprospateazaHartaFortat() {
+            window.location.reload(true);
+        }
+
         function obtineEmbedSketchfab(link) {
             if (!link || typeof link !== 'string') return null;
             link = link.trim();
-            
-            // Dacă conține /embed, îl luăm direct
+            if (link.includes("skfb.ly/")) {
+                var parti = link.split("skfb.ly/");
+                if (parti[1]) {
+                    var cod = parti[1].trim().split(/[\s/?#]+/)[0];
+                    if (cod) {
+                        return `https://sketchfab.com/models/${cod}/embed`;
+                    }
+                }
+            }
             if (link.includes("/embed")) {
                 return link.split("?")[0];
             }
-            
-            // Dacă utilizatorul a pus totuși un link skfb.ly, îl convertim în siguranță la embed oficial
-            if (link.includes("skfb.ly/")) {
-                var cod = link.split("skfb.ly/")[1].trim().split(/[\s/?#]+/)[0];
-                if (cod) {
-                    return `https://sketchfab.com/models/${cod}/embed`;
-                }
-            }
-
-            // Dacă e link complet cu ID de 32 de caractere
             var segmente = link.split('/');
             for (var i = 0; i < segmente.length; i++) {
                 if (segmente[i].length === 32) {
                     return `https://sketchfab.com/models/${segmente[i]}/embed`;
                 }
             }
-            
             return null;
         }
 
