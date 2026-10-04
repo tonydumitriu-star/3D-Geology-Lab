@@ -4,16 +4,32 @@
     {
       "type": "Feature",
       "properties": {
-        "Identification_Code": "H_Nou",
-        "Short_Description": "wqewe",
-        "3D_Model": "<div class=\"sketchfab-embed-wrapper\"> <iframe title=\"Outcrop (FB_ Tariverde)\" frameborder=\"0\" allowfullscreen mozallowfullscreen=\"true\" webkitallowfullscreen=\"true\" allow=\"autoplay; fullscreen; xr-spatial-tracking\" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src=\"https://sketchfab.com/models/23a2264ef98745759a0f6e65349d18c3/embed\"> </iframe> <p style=\"font-size: 13px; font-weight: normal; margin: 5px; color: #4A4A4A;\"> <a href=\"https://sketchfab.com/3d-models/outcrop-fb--tariverde-23a2264ef98745759a0f6e65349d18c3\" target=\"_blank\" rel=\"nofollow\" style=\"font-weight: bold; color: #1CAAD9;\"> Outcrop (FB_ Tariverde) </a> by <a href=\"https://sketchfab.com/3DGeologyLab\" target=\"_blank\" rel=\"nofollow\" style=\"font-weight: bold; color: #1CAAD9;\"> 3D Geology Laboratory </a> on <a href=\"https://sketchfab.com\" target=\"_blank\" rel=\"nofollow\" style=\"font-weight: bold; color: #1CAAD9;\">Sketchfab</a></p></div>",
-        "gx_media_links": "https://drive.google.com/file/d/1Oe3R7aEHaWR58CezTlI-UxccAL6Zq8pn/view?usp=drive_link\nhttps://drive.google.com/file/d/1OiH3lWsEYZkAlMNfUbZwGf4Jq1MOVKVN/view?usp=drive_link"
+        "Identification_Code": "aqwfdasd",
+        "Short_Description": "afsdfasfd",
+        "3D_Model": "https://skfb.ly/oQGwE",
+        "gx_media_links": "https://drive.google.com/file/d/1bN-MDS33g0ZDoeXhvoPVG3d2qyz28kHL/view?usp=drive_link\nhttps://drive.google.com/file/d/1bHa89aW5HjUP3ajgxvQn8Q2X4Wa2SBSO/view?usp=drive_link"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          22.383241,
-          46.619025
+          22.627716,
+          46.742213
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Identification_Code": "sdfw32svc",
+        "Short_Description": "sa\\c sdac\\scsc  sadf asf34",
+        "3D_Model": "https://skfb.ly/oIGTu",
+        "gx_media_links": "https://drive.google.com/file/d/116NiwNTdFvV_-r1YOFtmEVhqJHebFac_/view?usp=drive_link\nhttps://drive.google.com/file/d/12Fn9AYw8DTH5E4OlzqStVoEh3XkEuxfY/view?usp=drive_link"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.550125,
+          46.819798
         ]
       }
     }
