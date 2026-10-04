@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hartă Geologică 3D & Meniu Dedicat GeoJSON - Pietroasa</title>
+    <title>Hartă Geologică 3D & Simbol Afloriment & Index - Pietroasa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -26,7 +26,7 @@
         h2 { margin-top: 0; color: #e0a96d; font-size: 22px; }
         .detalii-text { font-size: 14px; line-height: 1.6; margin-top: 15px; color: #ddd; background: #252525; padding: 15px; border-radius: 6px; border: 1px solid #3a3a3a; white-space: pre-line; }
         
-        /* Meniul de sus din dreapta pentru butoanele de admin */
+        /* Butoane sus în dreapta */
         .btn-grup { position: absolute; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
         .btn-actiune { background: #e0a96d; color: #1e1e1e; border: none; padding: 10px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .btn-actiune:hover { background: #f0b97d; }
@@ -36,6 +36,32 @@
         .btn-editeaza-selectat { background: #2196F3; color: white; display: none; margin-top: 15px; width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-editeaza-selectat:hover { background: #0b7dda; }
         
+        /* Simbol Special Afloriment (Stil Geologic Pro) */
+        .marker-afloriment {
+            background: #e0a96d;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            text-align: center;
+            font-weight: bold;
+            color: #1e1e1e;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            font-size: 11px;
+            line-height: 24px;
+        }
+
+        /* Control straturi în dreapta jos */
+        .leaflet-bottom.leaflet-right { bottom: 40px; right: 10px; }
+        .leaflet-control-layers {
+            background: rgba(30, 30, 30, 0.9) !important;
+            color: #fff !important;
+            border: 1px solid #444 !important;
+            border-radius: 6px !important;
+            padding: 8px !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
+        }
+        .leaflet-control-layers-expanded { color: #fff !important; background: rgba(30, 30, 30, 0.95) !important; }
+        .leaflet-control-layers label { color: #e0a96d !important; font-weight: bold; font-size: 13px; }
+
         /* Ferestre Modale */
         .modal-admin { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; border: 2px solid #e0a96d; padding: 25px; z-index: 2000; width: 520px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
         .modal-admin h3 { margin-top: 0; color: #e0a96d; }
@@ -66,12 +92,11 @@
 <body>
 
     <div id="harta">
-        <!-- Meniu Dedicat Sus în Dreptul Hărții -->
         <div class="btn-grup">
             <button class="btn-actiune" onclick="activeazaModDragDrop()">+ Adaugă Punct Nou</button>
             <button class="btn-actiune btn-export" onclick="deschideModalExport()">📁 Generează GeoJSON Final</button>
         </div>
-        <div id="badge-versiune">Versiune: v1.0.40</div>
+        <div id="badge-versiune">Versiune: v1.0.42</div>
     </div>
 
     <!-- Panou Informații -->
@@ -292,21 +317,33 @@
                         }
                     }
 
-                    L.geoJSON({ type: "FeatureCollection", features: toatePuncteleFinal }, {
-                        pointToLayer: function (feature, latlng) {
-                            return L.marker(latlng);
-                        },
-                        onEachFeature: function(feature, layer) {
-                            var codId = feature.properties.Identification_Code || feature.properties.name || "Punct";
-                            layer.bindTooltip(codId, {permanent: false, direction: 'top'});
-                            
-                            layer.on('click', function(e) {
-                                L.DomEvent.stopPropagation(e);
-                                if (layer.closePopup) layer.closePopup();
-                                afiseazaDetaliiPunct(feature);
-                            });
-                        }
-                    }).addTo(layerPuncteHarta);
+                    // Parcurgem punctele și le desenăm cu simbolul special și indexul numeric (1, 2, 3...)
+                    toatePuncteleFinal.forEach(function(feature, index) {
+                        var coords = feature.geometry.coordinates;
+                        var latlng = [coords[1], coords[0]];
+                        var numarIndex = index + 1; // Indexul de la 1 în sus
+
+                        // Simbol personalizat tip afloriment geologic cu indexul în interior
+                        var customIcon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div class="marker-afloriment" style="width: 26px; height: 26px;">${numarIndex}</div>`,
+                            iconSize: [26, 26],
+                            iconAnchor: [13, 13]
+                        });
+
+                        var marker = L.marker(latlng, { icon: customIcon });
+
+                        var codId = feature.properties.Identification_Code || `Punct ${numarIndex}`;
+                        marker.bindTooltip(`<b>#${numarIndex}: ${codId}</b>`, {permanent: false, direction: 'top'});
+
+                        marker.on('click', function(e) {
+                            L.DomEvent.stopPropagation(e);
+                            afiseazaDetaliiPunct(feature);
+                        });
+
+                        layerPuncteHarta.addLayer(marker);
+                    });
+
                 })
                 .catch(err => console.log("Eroare la încărcarea punctelor:", err));
         }
